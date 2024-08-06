@@ -30,6 +30,18 @@ const userSchema = new Schema({
         enum: ["tailor", "user"],
         default: "user",
     },
+    favoris: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Post",
+            default: [],
+            required: true,
+        },
+    ],
+    created: {
+        type: Date,
+        default: Date.now,
+    },
 });
 
 const User = model("User", userSchema);
@@ -51,10 +63,7 @@ const validateUser = (user) => {
     return schema.validate(user);
   };
 
-  const validationResult = Joi.string().trim().min(6).required().messages({
-    'string.empty': 'Le mot de passe ne peut pas être vide',
-    'string.min': 'Le mot de passe doit comporter au moins 6 caractères'
-  }).validate();
+
 
   //Tailor
   const TailorSchema = new Schema({
@@ -71,8 +80,12 @@ const validateUser = (user) => {
           type: String,
           required: true
       },
+      follows:[
+          {
+              type: Schema.Types.ObjectId,
+              ref: "User"
+          }]
 
-      
   });
 
   const Tailor = model("Tailor", TailorSchema);

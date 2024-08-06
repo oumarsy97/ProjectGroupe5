@@ -19,7 +19,7 @@ static auth =async (req, res, next) => {
         return res.status(401).json({ message: 'Invalid token', data: null, status: false });
     }
        req.userId = decoded.id; 
-       console.log(req.userId);
+    //    console.log(req.userId);
     next();
 }
 

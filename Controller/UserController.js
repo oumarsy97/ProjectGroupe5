@@ -123,7 +123,6 @@ static addUser = async (req, res) => {
     };
 
     //update tailor
-
     static updateTailor = async (req, res) => {
     //   const { error } = validateTailor(req.body);
     //   if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
@@ -147,6 +146,56 @@ static addUser = async (req, res) => {
         res.status(500).json({ message: error.message, data: null, status: 500 });
       }
     };
+
+    static deleteTailor = async (req, res) => {
+        try {
+          const { id } = req.params;
+          const tailor = await Tailor.findByIdAndDelete(id);
+          if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
+          const user = await User.findByIdAndDelete(tailor.idUser);
+          if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+          res.status(200).json({ message: "Tailor deleted successfully", data: tailor, status: 200 });
+        } catch (error) {
+          res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    };
+
+  //add favoris
+  static addFavoris = async (req, res) => {
+    try {
+      const { idPost } = req.params;
+      const  idUser  = req.userId;
+      const user = await User.findById(idUser);
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      if(user.favoris.includes(idPost)) return res.status(400).json({ message: "Post already favoris", data: null, status: 400 });
+      user.favoris.push(idPost);
+      await user.save();
+      res.status(200).json({ message: "Post added to favoris successfully", data: user, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  static deleteFavoris = async (req, res) => {
+    try {
+      const { idPost } = req.params;
+      const  idUser  = req.userId;
+      const user = await User.findById(idUser);
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      if(!user.favoris.includes(idPost)) return res.status(400).json({ message: "Post not favoris", data: null, status: 400 });
+      const index = user.favoris.indexOf(idPost);
+      user.favoris.splice(index, 1);
+      await user.save();
+      res.status(200).json({ message: "Post deleted from favoris successfully", data: user, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+  
+
+ 
+
+
 
       
 };
