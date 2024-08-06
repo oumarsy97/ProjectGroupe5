@@ -17,7 +17,6 @@ const followSchema = new Schema({
 const Follow = model("Follow", followSchema);
 const validateFollow = (follow) => {
   const schema = Joi.object({
-    followerId: Joi.string().required(),
     followedId: Joi.string().required(),
   });
 
