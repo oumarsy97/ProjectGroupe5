@@ -1,5 +1,5 @@
 import joi from "joi";
-import { Schema ,model} from "mongoose";
+import { Schema, model } from "mongoose";
 
 const postSchema = new Schema({
     title: {
@@ -19,7 +19,7 @@ const postSchema = new Schema({
         ref: 'User',
         required: true,
     },
-    content:[{
+    content: [{
         type: String,
         required: true,
     }],
@@ -40,23 +40,23 @@ const postSchema = new Schema({
         type: Number,
         default: 0,
     },
-    visibility:{
+    visibility: {
         type: String,
         enum: ["public", "friends"],
         default: "public",
     },
-    mentions:{
+    mentions: {
         type: [{
             type: Schema.Types.ObjectId,
             ref: 'Tailor',
         }],
     },
-    
-    repost:[{
+
+    repost: [{
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
     }],
-    shares:{
+    shares: {
         type: [{
             type: Schema.Types.ObjectId,
             ref: 'User',
@@ -66,4 +66,4 @@ const postSchema = new Schema({
 
 const Post = model("Post", postSchema);
 
-export  {Post};
+export { Post };
