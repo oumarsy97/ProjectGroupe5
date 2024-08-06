@@ -1,9 +1,8 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export default class Utils {
-
- static criptPassword = async password =>{
+    static criptPassword = async password =>{
         const hashedPassword = await bcrypt.hash(password, 10);
         return hashedPassword;  
     }
