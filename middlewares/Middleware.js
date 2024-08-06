@@ -32,6 +32,6 @@ static isanTailor = async (req, res, next) => {
     }
     next();
 };
-
+ 
 
 }
