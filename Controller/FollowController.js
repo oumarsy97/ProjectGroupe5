@@ -8,6 +8,9 @@ export default class FollowController {
         if (error) return res.status(400).json({ error: error.details[0].message });
         try {
             const { followerId, followedId } = req.body;
+            let follower = await User.findById(followerId);
+            let followed = await User.findById(followedId);
+            if (!follower || !followed) return res.status(400).json({ error: "User not found" });
             let follows = await Follow.findOne({ followerId, followedId });
             if (follows) return res.status(400).json({ error: "Follow already exists" });
             const follow = await Follow.create({ followerId, followedId });

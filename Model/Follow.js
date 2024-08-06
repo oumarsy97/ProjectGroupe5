@@ -9,7 +9,7 @@ const followSchema = new Schema({
     },
     followedId: {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Tailor",
         required: true,
     }
 });
