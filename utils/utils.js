@@ -14,11 +14,8 @@ static comparePassword = async (password, hashedPassword) => {
 };
 
 static generateToken = (user) => {
-   const playload = {
-       id: user.id}
-
-    const token = jwt.sign(playload, process.env.SECRET_KEY, { expiresIn: '1h' });
-    return token
+    return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+  
 };
 
 };
