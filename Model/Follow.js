@@ -1,13 +1,15 @@
-import { Schema, model } from "mongoose";
+import { Schema, SchemaType, model } from "mongoose";
 import Joi from "joi";
 
 const followSchema = new Schema({
     followerId: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: "User",
         required: true,
     },
     followedId: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: "User",
         required: true,
     }
 });
