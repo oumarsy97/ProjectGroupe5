@@ -56,7 +56,35 @@ const validateUser = (user) => {
     'string.min': 'Le mot de passe doit comporter au moins 6 caractères'
   }).validate();
 
-export { User, validateUser };
+  //Tailor
+  const TailorSchema = new Schema({
+      idUser : {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true
+      },
+      address: {
+          type: String,
+          required: true
+      },
+      description: {
+          type: String,
+          required: true
+      },
+
+      
+  });
+
+  const Tailor = model("Tailor", TailorSchema);
+  const validateTailor = (tailor) => {
+    const schema = Joi.object({
+      address: Joi.string().required(),
+      description: Joi.string().required(),
+    });
+  
+    return schema.validate(tailor);
+  }
+export { User, validateUser, Tailor, validateTailor };
 
 
 
