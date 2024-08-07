@@ -3,35 +3,42 @@ import jwt from 'jsonwebtoken';
 import { Tailor } from '../Model/User.js';
 
 export default class Middleware {
+  
+  static auth = async (req, res, next) => {
+    try {
+      const entete = req.header('Authorization');
+      if (!entete) {
+        return res.status(401).json({ message: 'No token provided', status: false });
+      }
 
+      const token = entete.replace('Bearer ', '');
+      const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
-    static auth = async (req, res, next) => {
-        let entete = req.header('Authorization');
-        if (!entete) {
-            return res.status(401).json({ message: 'Not token', data: null, status: false });
-        }
+      if (!decoded) {
+        return res.status(401).json({ message: 'Invalid token', status: false });
+      }
 
-   const token = entete.replace('Bearer ', '');
-   console.log(process.env.SECRET_KEY);
-   const decoded = jwt.verify(token, process.env.SECRET_KEY);
-//    console.log(decoded);
-    if (!decoded) {
-        return res.status(401).json({ message: 'Invalid token', data: null, status: false });
+      req.userId = decoded.id;
+      next();
+    } catch (error) {
+      res.status(401).json({ message: 'Invalid token', status: false });
     }
-       req.userId = decoded.id; 
-       console.log(req.userId);
-    next();
-}
+  }
 
-    static isanTailor = async (req, res, next) => {
-        this.auth(req, res, next);
-        const tailor = await Tailor.findOne({ idUser: req.userId });
-        console.log(tailor);
-        if (!tailor) {
-            return res.status(401).json({ message: 'You are not a tailor', data: null, status: false });
-        }
-        next();
-    };
+  static isanTailor = async (req, res, next) => {
+    try {
+      // Appel de l'authentification pour s'assurer que l'utilisateur est authentifié
+      await Middleware.auth(req, res, () => {});
+      
+      const tailor = await Tailor.findOne({ idUser: req.userId });
 
+      if (!tailor) {
+        return res.status(401).json({ message: 'You are not a tailor', status: false });
+      }
 
+      next();
+    } catch (error) {
+      res.status(500).json({ message: error.message, status: false });
+    }
+  }
 }

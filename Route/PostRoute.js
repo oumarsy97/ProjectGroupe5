@@ -1,8 +1,10 @@
-import PostController from "../Controller/PostController.js";
+import express from 'express';
+import PostController from '../Controller/PostController.js';
+import Middleware from '../middlewares/Middleware.js';
+import upload from '../config/multerConfig.js';
 
-import express from "express";
-import Middleware from "../middlewares/Middleware.js";
 const PostRoute = express.Router();
 
-PostRoute.post('/create',Middleware.isanTailor, PostController.create);
-export default PostRoute 
+PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload.array('files', 10), PostController.create);
+
+export default PostRoute;
