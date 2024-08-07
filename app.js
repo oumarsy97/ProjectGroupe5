@@ -5,9 +5,13 @@ import UserRoute from './Route/UserRoute.js';
 import PostRoute from './Route/PostRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
 import StoryRoute from './Route/StoryRoute.js';
-
+import Messenger from './utils/Messenger.js';
+// Messenger.sendSms('0676960964', 'Seydina', 'Hello from Tailor Digital');
+// Messenger.sendMail('issadiol99@gmail.com', 'Seydina', 'Hello from Tailor Digital');
+//  Messenger.sendWhatsapp('0676960964', 'Seydina', 'Hello from Tailor Digital');
 connectDB();
 
+ 
 
 const app = express();
 app.use(express.json());
