@@ -1,6 +1,20 @@
 import joi from "joi";
 import { Schema, model } from "mongoose";
-
+const commentSchema = new Schema({
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    text: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 const postSchema = new Schema({
     title: {
         type: String,
@@ -23,10 +37,7 @@ const postSchema = new Schema({
         type: String,
         required: true,
     }],
-    comments: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+    comments: [commentSchema],
     likes: [{
         type: Schema.Types.ObjectId,
         ref: 'User',

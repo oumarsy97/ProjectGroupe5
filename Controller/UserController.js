@@ -2,7 +2,7 @@ import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import Utils from "../utils/utils.js";
-import upload from '../config/multerConfig.js'; // Import de la configuration multer
+import { Post } from "../Model/Post.js";
 
 export default class UserController {
   static addUser = async (req, res) => {
@@ -24,6 +24,7 @@ export default class UserController {
       if (req.file && req.file.path) {
         photoUrl = req.file.path;  // Utilisez req.file.path pour obtenir l'URL
       }
+      
   
       try {
         let user = await User.findOne({ email });
@@ -49,47 +50,47 @@ export default class UserController {
   
   
 
-  static login = async (req, res) => {
-    // const { email, password } = req.body;
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
-      }
-      const isMatch = await Utils.comparePassword(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
-      }
-      const token = Utils.generateToken(user);
-      console.log(token);
-      res.status(200).json({ message: "User logged in successfully", data: token, status: 200 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
+    static login = async (req, res) => {
+        // const { email, password } = req.body;
+  try {
+     const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({message:'Email ou mot de passe incorrect',data: null,status: false});
     }
-
-  };
+    const isMatch = await Utils.comparePassword(password, user.password);
+    
+    if (!isMatch) {
+      return res.status(401).json({message:'Email ou mot de passe incorrect',data: null,status: false});
+    } 
+    const token = Utils.generateToken(user);
+    // console.log(token);
+    res.status(200).json({ message: "User logged in successfully", data: token, status: 200 });
+} catch (error) {
+          res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+       
+      }; 
 
   //Tailor
 
-  static addTailor = async (req, res) => {
-    const { error } = validateTailor(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-    try {
-      //creer dabord le user puis le tailor
-      const { firstname, lastname, email, password, address, description } = req.body;
-      console.log(firstname, lastname, email, password, address, description);
-      let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
-      const newuser = await User.create({ firstname, lastname, email, password: await Utils.criptPassword(password), role: "tailor" });
-      console.log(newuser);
-      const newtailor = await Tailor.create({ idUser: newuser._id, address, description });
-      res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  };
+      static addTailor = async (req, res) => {
+        const { error } = validateTailor(req.body);
+        if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+        try {  
+          //creer dabord le user puis le tailor
+          const {firstname, lastname, email, password, address, description } = req.body;
+        //   console.log(firstname, lastname, email, password, address, description );
+          let user  = await User.findOne({ email });
+          if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
+          const newuser =await  User.create({ firstname, lastname, email, password:await Utils.criptPassword(password), role:"tailor" });
+        //   console.log(newuser);
+          const newtailor = await Tailor.create({ idUser:newuser._id, address, description });
+          res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
+        } catch (error) {
+          res.status(500).json({ message: error.message, data: null, status: 500 });
+        } 
+        };
 
   //lister Users
   static listUser = async (req, res) => {
@@ -223,12 +224,7 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
+  
 
 
-
-
-
-
-
-};
-
+    }

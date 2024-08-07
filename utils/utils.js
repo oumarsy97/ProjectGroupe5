@@ -11,6 +11,10 @@ export default class Utils {
         const isMatch = await bcrypt.compare(password, hashedPassword);
         return isMatch;
     };
+    static comparePassword = async (password, hashedPassword) => {
+        const isMatch = await bcrypt.compare(password, hashedPassword);
+        return isMatch;
+    };
 
     static generateToken = (user) => {
         return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
