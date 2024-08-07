@@ -1,7 +1,7 @@
 import dns from 'dns';
 import { User, Tailor } from "../Model/User.js";
 dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google's DNS servers
-import { Follow, validateFollow } from "/home/fatoumata/Bureau/Node/ProjetGroupe5/ProjectGroupe5/Model/Follow.js";
+import { Follow, validateFollow } from "../Model/Follow.js";
 
 export default class FollowController {
     static follow = async (req, res) => {
@@ -37,5 +37,4 @@ export default class FollowController {
             res.status(500).json({ error: error.message });
         }
     }
-    
 }
