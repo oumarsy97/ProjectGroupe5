@@ -12,7 +12,7 @@ static auth =async (req, res, next) => {
     }
 
    const token = entete.replace('Bearer ', '');
-   console.log(process.env.SECRET_KEY);
+//    console.log(process.env.SECRET_KEY);
    const decoded = jwt.verify(token, process.env.SECRET_KEY);
 //    console.log(decoded);
     if (!decoded) {
