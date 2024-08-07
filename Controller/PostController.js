@@ -124,6 +124,31 @@ export default class PostController{
         }
     }
 
-  
+    static share = async (req, res) => {
+      const { postId, recipientId } = req.body;
+      const initiatorId = req.userId;
+
+      try {
+          // Vérifier si le post et les utilisateurs existent
+          const user = await User.findById(initiatorId);
+          const post = await Post.findById(postId);
+          const recipient = await User.findById(recipientId);
+
+          if (!user || !post || !recipient) {
+              return res.status(404).json({ message: 'Utilisateur ou post non trouvé', status: false });
+          }
+
+          // Créer une nouvelle discussion
+          const newDiscussion = await Discussion.create({
+              post: postId,
+              initiator: initiatorId,
+              recipient: recipientId
+          });
+
+          return res.status(201).json({ message: 'Discussion créée avec succès', data: newDiscussion, status: true });
+      } catch (error) {
+          return res.status(400).json({ message: error.message, data: null, status: false });
+      }
+  }
 
 }

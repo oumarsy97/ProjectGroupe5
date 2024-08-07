@@ -8,7 +8,7 @@ const PostRoute = express.Router();
 // PostRoute.post('/create',Middleware.isanTailor, PostController.create);
 PostRoute.get('/getAllPosts',Middleware.isanTailor, PostController.getAllPosts);
 PostRoute.get('/getPostById/:id', Middleware.isanTailor, PostController.getPostById);
+PostRoute.get('/share/:postId', Middleware.auth, PostController.share);
 PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload.array('files', 10), PostController.create);
-PostRoute.get('/share/:postId', Middleware.isanTailor, PostController.share);
 
 export default PostRoute;
