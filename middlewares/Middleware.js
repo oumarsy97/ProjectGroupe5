@@ -24,12 +24,14 @@ static auth =async (req, res, next) => {
 }
 
 static isanTailor = async (req, res, next) => {
-    this.auth(req, res, next);
+    // this.auth(req, res, next);
+   
     const tailor = await Tailor.findOne({ idUser: req.userId });
-    console.log(tailor);
+    // console.log(tailor);
     if (!tailor) {
         return res.status(401).json({ message: 'You are not a tailor', data: null, status: false });
     }
+   
     next();
 };
  

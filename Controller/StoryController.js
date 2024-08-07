@@ -6,6 +6,7 @@ export default class StoryController {
         if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: false });
         const { title, description, content } = req.body;
         const author = req.userId;
+        console.log(author);
         try {
             const newStory = await Story.create({ title, description, content, author });
             res.status(201).json({ message: "Story create successfully", data: newStory, status: false });

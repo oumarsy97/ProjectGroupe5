@@ -1,4 +1,5 @@
 import {Schema, model} from "mongoose";
+import Joi from "joi";
 
 const storySchema = new Schema({
     title: {
@@ -35,7 +36,7 @@ const Story = model("Story", storySchema);
 const validateStory = (story) => {
     const schema = Joi.object({
         title: Joi.string().min(3).max(30).required(),
-        description: Joi.string().min(3).max(30).required(),
+        description: Joi.string().min(3).max(300).required(),
         content: Joi.string().required(),
     });
     return schema.validate(story);

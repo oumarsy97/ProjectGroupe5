@@ -35,7 +35,7 @@ static addUser = async (req, res) => {
       return res.status(401).json({message:'Email ou mot de passe incorrect',data: null,status: false});
     } 
     const token = Utils.generateToken(user);
-    console.log(token);
+    // console.log(token);
     res.status(200).json({ message: "User logged in successfully", data: token, status: 200 });
 } catch (error) {
           res.status(500).json({ message: error.message, data: null, status: 500 });
