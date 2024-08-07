@@ -1,5 +1,5 @@
 import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
-import  bcrypt from "bcrypt";
+import  bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import Utils from "../utils/utils.js";
 
