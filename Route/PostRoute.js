@@ -11,4 +11,6 @@ PostRoute.get('/getPostById/:id', Middleware.isanTailor, PostController.getPostB
 PostRoute.get('/share/:postId', Middleware.auth, PostController.share);
 PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload.array('files', 10), PostController.create);
 
+PostRoute.get('/getAllPosts', PostController.getAllPosts);
+PostRoute.get('/getPostById',Middleware.auth, Middleware.isanTailor, PostController.getPostById);
 export default PostRoute;
