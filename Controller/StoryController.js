@@ -13,12 +13,12 @@ export default class StoryController {
         } catch (error) {
             res.status(400).json({ message: error.message, data: null, status: false });
         }
-    };
+    }; 
 
     static deleteStory = async (req, res) => {
         try {
             const { idStory } = req.params;
-            iduser = req.userId;
+           const iduser = req.userId;
             const story = await Story.findById(idStory);
             if (story.author != iduser) return res.status(400).json({ message: "you can't delete this story", data: null, status: false });
             const deleteStory = await Story.findByIdAndDelete(id);

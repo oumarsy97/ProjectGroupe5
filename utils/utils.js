@@ -6,9 +6,13 @@ export default class Utils {
   
     static criptPassword = async password =>{
         const hashedPassword = await bcrypt.hash(password, 10);
-        return hashedPassword;  
+        return hashedPassword;
     }
 
+    static comparePassword = async (password, hashedPassword) => {
+        const isMatch = await bcrypt.compare(password, hashedPassword);
+        return isMatch;
+    };
     static comparePassword = async (password, hashedPassword) => {
         const isMatch = await bcrypt.compare(password, hashedPassword);
         return isMatch;

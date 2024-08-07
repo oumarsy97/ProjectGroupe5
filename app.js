@@ -6,7 +6,6 @@ import PostRoute from './Route/PostRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
 import StoryRoute from './Route/StoryRoute.js';
 
-import PostRoute from './Route/PostRoute.js';
 connectDB();
 
 
