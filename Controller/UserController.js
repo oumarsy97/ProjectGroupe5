@@ -6,20 +6,49 @@ import { Post } from "../Model/Post.js";
 
 export default class UserController {
   static addUser = async (req, res) => {
-    const { error } = validateUser(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-    try {
-
-      const { firstname, lastname, email, password, role, photo, phone, genre } = req.body;
-      let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
-      const newuser = await User.create({ firstname, lastname, email, password: await Utils.criptPassword(password), role, photo, phone, genre });
-
-      res.status(201).json({ message: "User created successfully", data: newuser, status: 201 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
+    upload.single('photo')(req, res, async (err) => {
+      if (err) {
+        console.error('Upload error:', err); // Log de l'erreur pour débogage
+        return res.status(500).json({ message: "Error processing file", data: null, status: 500 });
+      }
+      
+      const { error } = validateUser(req.body);
+      if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
+      
+      const { firstname, lastname, email, password, role, phone, genre } = req.body;
+      let photoUrl = null;
+  
+      // Vérifiez la structure de req.file
+      console.log('req.file:', req.file);
+  
+      if (req.file && req.file.path) {
+        photoUrl = req.file.path;  // Utilisez req.file.path pour obtenir l'URL
+      }
+      
+  
+      try {
+        let user = await User.findOne({ email });
+        if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+  
+        const newUser = await User.create({ 
+          firstname, 
+          lastname, 
+          email, 
+          password: await Utils.criptPassword(password), 
+          role, 
+          photo: photoUrl,  // Stockez l'URL de l'image
+          phone, 
+          genre 
+        });
+  
+        res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
+      } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+      }
+    });
   };
+  
+  
 
     static login = async (req, res) => {
         // const { email, password } = req.body;
