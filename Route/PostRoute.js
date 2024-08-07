@@ -4,7 +4,8 @@ import Middleware from "../middlewares/Middleware.js";
 
 const PostRoute = express.Router();
 
-PostRoute.post('/create', Middleware.isanTailor, PostController.create);
-PostRoute.get('/share/:postId', Middleware.isanTailor, PostController.share);
+PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, PostController.create);
+PostRoute.get('/share/:postId',Middleware.auth, Middleware.isanTailor, PostController.share);
+PostRoute.post('/report/:postId',Middleware.auth, Middleware.isanTailor, PostController.report);
 
-export default PostRoute;
+export default PostRoute; 

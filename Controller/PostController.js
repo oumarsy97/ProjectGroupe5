@@ -19,7 +19,6 @@ export default class PostController {
         const initiatorId = req.userId;
 
         try {
-            // Vérifier si le post et les utilisateurs existent
             const user = await User.findById(initiatorId);
             const post = await Post.findById(postId);
             const recipient = await User.findById(recipientId);
@@ -28,7 +27,6 @@ export default class PostController {
                 return res.status(404).json({ message: 'Utilisateur ou post non trouvé', status: false });
             }
 
-            // Créer une nouvelle discussion
             const newDiscussion = await Discussion.create({
                 post: postId,
                 initiator: initiatorId,
@@ -45,6 +43,8 @@ export default class PostController {
         const { postId } = req.params;
         const { reason } = req.body;
         const reportedBy = req.userId;
+        console.log(reportedBy);
+        
         try {
             const post = await Post.findById(postId);
             if (!post) {
