@@ -1,6 +1,7 @@
 import dns from 'dns';
 dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google's DNS servers
 import { Follow, validateFollow } from "../Model/Follow.js";
+// import User from "../Model/User.js";
 
 export default class FollowController {
     static follow = async (req, res) => {

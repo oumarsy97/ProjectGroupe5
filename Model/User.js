@@ -64,7 +64,6 @@ const validateUser = (user) => {
 };
 
 
-
 //Tailor
 const TailorSchema = new Schema({
     idUser: {
@@ -91,8 +90,12 @@ const TailorSchema = new Schema({
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        address: Joi.string().required(),
-        description: Joi.string().required(),
+        firtsname: Joi.string().min(3).max(30).required(),
+        lastname: Joi.string().min(3).max(30).required(),
+        email: Joi.string().email().required(),
+        password: Joi.string().min(6).required(),
+      address: Joi.string().required(),
+      description: Joi.string().required(),
     });
 
     return schema.validate(tailor);

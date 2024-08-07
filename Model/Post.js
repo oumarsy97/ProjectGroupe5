@@ -51,7 +51,6 @@ const postSchema = new Schema({
             ref: 'Tailor',
         }],
     },
-
     repost: [{
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
@@ -61,7 +60,22 @@ const postSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'User',
         }],
-    }
+    },
+    reports: [{
+        reportedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        reason: {
+            type: String,
+            required: true,
+        },
+        reportedAt: {
+            type: Date,
+            default: Date.now,
+        }
+    }]
 });
 
 const Post = model("Post", postSchema);
