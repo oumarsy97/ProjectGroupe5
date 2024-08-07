@@ -2,10 +2,10 @@ import express from 'express';
 import dotenv from 'dotenv/config';
 import connectDB from './config/database.js';
 import UserRoute from './Route/UserRoute.js';
-import PostRoute from './Route/PostRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
 import ReportRoute from './Route/ReportRoute.js';
 
+import PostRoute from './Route/PostRoute.js';
 connectDB();
 
 const app = express();
