@@ -6,7 +6,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'social_network', // Nom du dossier sur Cloudinary
-    allowed_formats: ['jpg', 'png', 'mp4'], // Formats autorisés
+    allowed_formats: ['jpg', 'jpeg', 'png', 'mp4'], // Formats autorisés
   },
 });
 

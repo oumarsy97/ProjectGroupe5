@@ -2,9 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv/config';
 import connectDB from './config/database.js';
 import UserRoute from './Route/UserRoute.js';
-import PostRoute from './Route/PostRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
 
+import PostRoute from './Route/PostRoute.js';
 connectDB();
 
 
@@ -15,7 +15,6 @@ app.use(`${process.env.BASE_URL}/users`, UserRoute);
 app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
 app.use(`${process.env.BASE_URL}/post`, PostRoute);
 
-app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
 
 
 const port = process.env.PORT || 3000;
