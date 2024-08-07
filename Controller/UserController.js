@@ -7,14 +7,35 @@ export default class UserController {
   static addUser = async (req, res) => {
     const { error } = validateUser(req.body);
     if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-    try {
 
+    try {
       const { firstname, lastname, email, password, role, photo, phone, genre } = req.body;
+
+      let photoUrl = null;
+      if (photo) {
+        try {
+          const uploadResult = await cloudinary.uploader.upload(photo);
+          photoUrl = uploadResult.secure_url;
+        } catch (uploadError) {
+          return res.status(500).json({ message: "Error uploading photo", data: null, status: 500 });
+        }
+      }
+
       let user = await User.findOne({ email });
       if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
-      const newuser = await User.create({ firstname, lastname, email, password: await Utils.criptPassword(password), role, photo, phone, genre });
 
-      res.status(201).json({ message: "User created successfully", data: newuser, status: 201 });
+      const newUser = await User.create({ 
+        firstname, 
+        lastname, 
+        email, 
+        password: await Utils.criptPassword(password), 
+        role, 
+        photo: photoUrl, 
+        phone, 
+        genre 
+      });
+
+      res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
