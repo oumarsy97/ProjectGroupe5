@@ -160,7 +160,7 @@ export default class PostController {
     try {
       const { idPost } = req.params;
       const  idUser  = req.userId;
-      console.log(idPost, idUser);
+    //   console.log(idPost, idUser);
       const { comment } = req.body;
       const user = await User.findById(idUser);
       if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
@@ -203,31 +203,7 @@ export default class PostController {
   }
 
 
-  static deleteCommentfromPost = async (postId, commentId) => {
-    try {
-        const post = await Post.findById(postId);
-
-        if (!post) {
-            return { message: "Post not found", data: null, status: 404 };
-        }
-
-        // Trouver l'index du commentaire à supprimer
-        const commentIndex = post.comments.findIndex(comment => comment._id.toString() === commentId);
-        if (commentIndex === -1) {
-            return { message: "Comment not found", data: null, status: 404 };
-        }
-
-        // Supprimer le commentaire du tableau
-        post.comments.splice(commentIndex, 1);
-
-        // Enregistrer les modifications
-        await post.save();
-
-        return { message: "Comment deleted successfully", data: story, status: 200 };
-    } catch (error) {
-        return { message: error.message, data: null, status: 500 };
-    }
-};
+ 
 
 
 }
