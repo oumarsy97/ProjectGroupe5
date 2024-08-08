@@ -57,7 +57,7 @@ export default class UserController {
       }
       
       const { firstname, lastname, email, password, role, phone, genre } = req.body;
-      console.log(firstname, lastname, email, password);
+      console.log(firstname, lastname, email);
       const { error } = validateUser(req.body);
       if (error) {
         return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
