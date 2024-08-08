@@ -15,17 +15,15 @@ const generateCodeSchema = new Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        expires: 60 * 60 * 24 * 7,
     },
     modePaiement: {
         type: String,
         enum: ["Wave", "OM"],
         default: "Wave"
     },
-    // expire: {
-    //     type: Date,
-    //     default: Date.now + 5 * 60 * 1000
-    // },
+    
     status : {
         type: String,
         enum: ["pending", "used"],

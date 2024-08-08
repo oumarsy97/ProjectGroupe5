@@ -5,42 +5,36 @@ import Utils from "../utils/utils.js";
 import { Post } from "../Model/Post.js";
 import GenerateCode from "../Model/GenerateCode.js";
 import Messenger from "../utils/Messenger.js";
+import upload from '../config/multerConfig.js'; // Import de la configuration multer
 
 export default class UserController {
   static addUser = async (req, res) => {
-    upload.single('photo')(req, res, async (err) => {
+    upload.single('photo')(req, res, async function (err) {
       if (err) {
-        console.error('Upload error:', err); // Log de l'erreur pour débogage
-        return res.status(500).json({ message: "Error processing file", data: null, status: 500 });
+        return res.status(400).json({ message: err.message, data: null, status: 400 });
       }
-      
-      const { error } = validateUser(req.body);
-      if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-      
+  
       const { firtsname, lastname, email, password, role, phone, genre } = req.body;
-      let photoUrl = null;
-  
-      // Vérifiez la structure de req.file
-      console.log('req.file:', req.file);
-  
-      if (req.file && req.file.path) {
-        photoUrl = req.file.path;  // Utilisez req.file.path pour obtenir l'URL
+      const { error } = validateUser(req.body);
+      if (error) {
+        return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
       }
-
   
       try {
         let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        if (user) {
+          return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        }
   
-        const newUser = await User.create({ 
-          firtsname, 
-          lastname, 
-          email, 
-          password: await Utils.criptPassword(password), 
-          role, 
-          photo: photoUrl,  // Stockez l'URL de l'image
-          phone, 
-          genre 
+        const newUser = await User.create({
+          firtsname,
+          lastname,
+          email,
+          password: await Utils.criptPassword(password),
+          role,
+          photo: req.file?.path, // Photo URL returned by Cloudinary
+          phone,
+          genre
         });
   
         res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
@@ -81,11 +75,11 @@ export default class UserController {
         if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
          try {  
           //creer dabord le user puis le tailor
-          const {firtsname, lastname, email, password, address, description } = req.body;
+          const {firtsname, lastname, email,phone, password, address, description } = req.body;
         //   console.log(firtsname, lastname, email, password, address, description );
           let user  = await User.findOne({ email });
           if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
-          const newuser =await  User.create({ firtsname, lastname, email, password:await Utils.criptPassword(password), role:"tailor" });
+          const newuser =await  User.create({ firtsname, lastname, email, phone, password:await Utils.criptPassword(password), role:"tailor" });
         //   console.log(newuser);
           const newtailor = await Tailor.create({ idUser:newuser._id, address, description });
           res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
@@ -264,8 +258,9 @@ export default class UserController {
       }
       const newcode = await GenerateCode.create(newGerenerateCode);
       res.status(200).json({ message: "Code created successfully", data: newcode, status: 200 });
-      Messenger.sendSms(user.phone, 'Tailor Digital', `Votre code de paiement est : ${newcode.code}`);
-      Messenger.sendMail(user.email, 'Tailor Digital', `Votre code de paiement est : ${newcode.code}`);
+      const recu = `Recu<br>Montant : ${newcode.montant}<br>Mode de paiement : ${newcode.modePaiement}<br>Code : ${newcode.code}<br>Credits : ${newcode.credits}<br> Date : ${newcode.createdAt}<br>expire dans 7 jours`;
+      Messenger.sendSms(user.phone, 'Tailor Digital', `Votre code de paiement est : ${recu}`);
+      Messenger.sendMail(user.email, 'Tailor Digital', `Votre code de paiement est : ${recu}`);
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
