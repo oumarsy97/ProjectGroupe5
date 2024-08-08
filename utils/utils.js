@@ -19,7 +19,7 @@ export default class Utils {
     };
 
     static generateToken = (user) => {
-        return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '23h' });
     
     };
 
