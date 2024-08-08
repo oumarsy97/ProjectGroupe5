@@ -53,7 +53,7 @@ const validateUser = (user) => {
         password: Joi.string().trim().min(6).required().messages({
             'string.empty': 'Password cannot be empty',
             'string.min': 'Password must be at least 6 characters long'
-        }),
+        }), 
         role: Joi.string(),
         photo: Joi.string(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
@@ -77,13 +77,24 @@ const TailorSchema = new Schema({
     },
     description: {
         type: String,
-        required: true
+        required: true 
     },
     follows: [
         {
             type: Schema.Types.ObjectId,
             ref: "User"
-        }]
+        }],
+
+    created: {
+        type: Date,
+        default: Date.now
+    },
+
+credits: {
+    type: Number,
+    default: 50
+},
+
 
 });
 

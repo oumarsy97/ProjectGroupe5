@@ -1,3 +1,4 @@
+import { User,  Tailor,  } from "../Model/User.js";
 import { User } from '../Model/User.js';
 import { Post } from '../Model/Post.js';
 import { Discussion } from '../Model/Discussion.js';
@@ -5,14 +6,26 @@ import { Discussion } from '../Model/Discussion.js';
 export default class PostController {
     static create = async (req, res) => {
         const { title, description } = req.body;
-        const author = req.userId;
+        const idUser = req.userId;
         const files = req.files;
+        const tailor = await Tailor.findOne({ idUser });  
+        // console.log(tailor);  
+        //verifer si il au moins 10 credits 
+        if (tailor.credits < 10) {
+          return res.status(400).json({ message: 'You do not have enough credits', status: false });
+        }
+     
 
         if (!files || files.length === 0) {
             return res.status(400).json({ message: 'No files uploaded', status: false });
         }
 
         try {
+          // Obtenir les URLs Cloudinary des fichiers
+          const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
+            
+          const newPost = await Post.create({ title, description, content: contentUrls, author:idUser });
+          res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
             // Obtenir les URLs Cloudinary des fichiers
             const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
 
