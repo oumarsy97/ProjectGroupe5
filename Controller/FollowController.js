@@ -10,10 +10,11 @@ export default class FollowController {
         try {
             const followedId = req.body.followedId;
             const followerId = req.userId;
+            console.log(req.body);
             if (followerId == followedId) return res.status(400).json({ error: "You cannot follow yourself" });
             let follower = await User.findById(followerId);
-            // console.log(followedId);
-            let followed = await Tailor.findById(followedId);
+            let followed = await User.findById(followedId);
+            //console.log(followed);
             if (!follower || !followed) return res.status(400).json({ error: "User not found" });
             let follows = await Follow.findOne({ followerId, followedId });
             if (follows) return res.status(400).json({ error: "Follow already exists" });
@@ -33,6 +34,54 @@ export default class FollowController {
             const follow = await Follow.findOneAndDelete({ followerId, followedId });
             if (!follow) return res.status(400).json({ error: "Follow not found" });
             res.status(200).json(follow);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getFollowers = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followedId = req.followedId;
+            const followers = await Follow.find({ followedId: followedId });
+            res.status(200).json(followers);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getFollowing = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followedId = req.id;
+            const following = await Follow.find({ followerId: followedId });
+            res.status(200).json(following);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getMyFollowers = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followerId = req.userId;
+            const followers = await Follow.find({ followedId: followerId });
+            res.status(200).json(followers);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getMyFollowing = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followedId = req.userId;
+            const following = await Follow.find({ followerId: followedId });
+            res.status(200).json(following);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

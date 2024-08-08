@@ -47,7 +47,7 @@ const userSchema = new Schema({
 const User = model("User", userSchema);
 const validateUser = (user) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
+        firstname: Joi.string().min(2).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().min(6).required().messages({
@@ -91,17 +91,12 @@ const TailorSchema = new Schema({
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
-        lastname: Joi.string().min(3).max(30).required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(6).required(),
-      address: Joi.string().required(),
-      description: Joi.string().required(),
+        idUser: Joi.required(),
+        address: Joi.string().required(),
+        description: Joi.string().required(),
     });
 
     return schema.validate(tailor);
 }
+
 export { User, validateUser, Tailor, validateTailor };
-
-
-

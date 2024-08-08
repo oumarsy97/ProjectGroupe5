@@ -5,12 +5,10 @@ const followSchema = new Schema({
   followerId: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: true,
   },
   followedId: {
     type: Schema.Types.ObjectId,
     ref: "Tailor",
-    required: true,
   }
 });
 
