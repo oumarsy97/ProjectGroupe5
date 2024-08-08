@@ -10,7 +10,7 @@ export default class PostController{
         // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
-          return res.status(400).json({ message: 'You do not have enough credits', status: false });
+          return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
         }
      
         if (!files || files.length === 0) {
@@ -23,6 +23,8 @@ export default class PostController{
             
           const newPost = await Post.create({ title, description, content: contentUrls, author:idUser });
           res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+          tailor.credits -= 10;
+          await tailor.save();
         } catch (error) {
           res.status(400).json({ message: error.message, data: null, status: false });
         }

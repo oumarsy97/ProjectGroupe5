@@ -23,7 +23,7 @@ app.use(`${process.env.BASE_URL}/post`, PostRoute);
 app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
  
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 * * * *', async () => {
     try {
         console.log('Deleting expired stories...'); 
         const now = new Date();
