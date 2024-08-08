@@ -10,5 +10,7 @@ router.post("/addtailor", UserController.addTailor);
 router.get("/gettailor",Middleware.auth, UserController.listTailor);
 router.get("/addfavoris/:idPost",Middleware.auth, UserController.addFavoris); 
 router.delete("/deletefavoris/:idPost",Middleware.auth, UserController.deleteFavoris);
+router.post("/addcredits",Middleware.auth,Middleware.isanTailor, UserController.addCredit);
+router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.achatCode);
 
 export default router;

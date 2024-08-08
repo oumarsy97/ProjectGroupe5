@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import Utils from "../utils/utils.js";
 import { Post } from "../Model/Post.js";
+import GenerateCode from "../Model/GenerateCode.js";
+import Messenger from "../utils/Messenger.js";
 
 export default class UserController {
   static addUser = async (req, res) => {
@@ -15,7 +17,7 @@ export default class UserController {
       const { error } = validateUser(req.body);
       if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
       
-      const { firstname, lastname, email, password, role, phone, genre } = req.body;
+      const { firtsname, lastname, email, password, role, phone, genre } = req.body;
       let photoUrl = null;
   
       // Vérifiez la structure de req.file
@@ -24,14 +26,14 @@ export default class UserController {
       if (req.file && req.file.path) {
         photoUrl = req.file.path;  // Utilisez req.file.path pour obtenir l'URL
       }
-      
+
   
       try {
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
   
         const newUser = await User.create({ 
-          firstname, 
+          firtsname, 
           lastname, 
           email, 
           password: await Utils.criptPassword(password), 
@@ -77,13 +79,13 @@ export default class UserController {
       static addTailor = async (req, res) => {
         const { error } = validateTailor(req.body);
         if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
-        try {  
+         try {  
           //creer dabord le user puis le tailor
-          const {firstname, lastname, email, password, address, description } = req.body;
-        //   console.log(firstname, lastname, email, password, address, description );
+          const {firtsname, lastname, email, password, address, description } = req.body;
+        //   console.log(firtsname, lastname, email, password, address, description );
           let user  = await User.findOne({ email });
           if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
-          const newuser =await  User.create({ firstname, lastname, email, password:await Utils.criptPassword(password), role:"tailor" });
+          const newuser =await  User.create({ firtsname, lastname, email, password:await Utils.criptPassword(password), role:"tailor" });
         //   console.log(newuser);
           const newtailor = await Tailor.create({ idUser:newuser._id, address, description });
           res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
@@ -117,7 +119,7 @@ export default class UserController {
         { $unwind: "$user" },
         {
           $project: {
-            _id: 1, address: 1, description: 1, 'firstname': '$user.firstname',
+            _id: 1, address: 1, description: 1, 'firtsname': '$user.firtsname',
             'lastname': '$user.lastname',
             'email': '$user.email',
             'role': '$user.role'
@@ -157,15 +159,15 @@ export default class UserController {
 
   //update tailor
   static updateTailor = async (req, res) => {
-    //   const { error } = validateTailor(req.body);
-    //   if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+      const { error } = validateTailor(req.body);
+      if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
     try {
       const { id } = req.params;
-      const { firstname, lastname, email, password, address, description } = req.body;
+      const { firtsname, lastname, email, password, address, description } = req.body;
       const tailor = await Tailor.findById(id);
       if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
       const userUpdate = {};
-      if (firstname) userUpdate.firstname = firstname;
+      if (firtsname) userUpdate.firtsname = firtsname;
       if (lastname) userUpdate.lastname = lastname;
       if (email) userUpdate.email = email;
       if (password) userUpdate.password = await Utils.criptPassword(password);
@@ -224,7 +226,50 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
-  
+
+  static addCredit = async (req, res) => {
+    try {
+      const idUser = req.userId;
+      const { code } = req.body;
+      const user = await User.findById(idUser);
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      const mycode = await GenerateCode.findOne({ code: code });
+      if (!mycode) return res.status(404).json({ message: "Code not valide", data: null, status: 404 });
+      if(mycode.status === 'used') return res.status(400).json({ message: "Code already used", data: null, status: 400 });
+      const tailor = await Tailor.findOne({ idUser });
+      if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
+      const credits = tailor.credits + mycode.credits;
+      tailor.credits = credits;
+      mycode.status = 'used';
+      await mycode.save();
+      await tailor.save();
+      res.status(200).json({ message: "Credits added successfully", data: tailor, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  static achatCode = async (req, res) => {
+    try {
+      const idUser = req.userId;
+      const user = await User.findById(idUser);
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      const {montant, modePaiement} = req.body;
+      if(montant<100) return res.status(400).json({ message: "Montant invalide", data: null, status: 400 });
+      const newGerenerateCode = {
+        montant, 
+        modePaiement,
+        code : Utils.Code(),
+        credits : montant / 100
+      }
+      const newcode = await GenerateCode.create(newGerenerateCode);
+      res.status(200).json({ message: "Code created successfully", data: newcode, status: 200 });
+      Messenger.sendSms(user.phone, 'Tailor Digital', `Votre code de paiement est : ${newcode.code}`);
+      Messenger.sendMail(user.email, 'Tailor Digital', `Votre code de paiement est : ${newcode.code}`);
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  } 
 
 
     }
