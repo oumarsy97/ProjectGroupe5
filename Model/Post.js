@@ -15,6 +15,40 @@ const commentSchema = new Schema({
         default: Date.now
     }
 });
+
+const likeSchema = new Schema({
+    likerId:{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    likedId:{
+        type: Schema.Types.ObjectId,
+        ref: 'Post',
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const dislikeSchema = new Schema({
+    dislikerId:{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    dislikedId:{
+        type: Schema.Types.ObjectId,
+        ref: 'Post',
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 const postSchema = new Schema({
     title: {
         type: String,
@@ -38,15 +72,9 @@ const postSchema = new Schema({
         required: true,
     }],
     comments: [commentSchema],
-    likes: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+    likes:[likeSchema],
     photo: String,
-    dislikes: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+    dislikes: [dislikeSchema],
     views: {
         type: Number,
         default: 0,
@@ -62,7 +90,6 @@ const postSchema = new Schema({
             ref: 'Tailor',
         }],
     },
-
     repost: [{
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
@@ -72,7 +99,22 @@ const postSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'User',
         }],
-    }
+    },
+    reports: [{
+        reportedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        reason: {
+            type: String,
+            required: true,
+        },
+        reportedAt: {
+            type: Date,
+            default: Date.now,
+        }
+    }]
 });
 
 const Post = model("Post", postSchema);

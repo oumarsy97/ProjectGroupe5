@@ -64,7 +64,6 @@ const validateUser = (user) => {
 };
 
 
-
 //Tailor
 const TailorSchema = new Schema({
     idUser: {
