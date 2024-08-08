@@ -218,5 +218,34 @@ export default class PostController{
     }
   }
 
+  // Update the description of a post by id
+static updateDescription = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+        if (user.role !== "tailor") {
+            return res.status(403).json({ message: "Only tailors can update posts", data: null, status: false });
+        }
+
+        const { description } = req.body;
+        if (!description) {
+            return res.status(400).json({ message: "Description is required", data: null, status: false });
+        }
+
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found", data: null, status: false });
+        }
+
+        post.description = description;
+        await post.save();
+
+        res.status(200).json({ message: "Post description updated successfully", data: post, status: true });
+    } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: false });
+    }
+};
+
+
 
 }
+
