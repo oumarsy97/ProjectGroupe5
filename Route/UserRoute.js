@@ -11,4 +11,7 @@ router.get("/gettailor",Middleware.auth, UserController.listTailor);
 router.get("/addfavoris/:idPost",Middleware.auth, UserController.addFavoris); 
 router.delete("/deletefavoris/:idPost",Middleware.auth, UserController.deleteFavoris);
 
+// Edit User profile
+router.put("/edituser/:idUser", Middleware.auth, UserController.editUser);
+
 export default router;
