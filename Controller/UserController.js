@@ -41,8 +41,6 @@ export default class UserController {
     });
   };
   
-  
-  
 
   static login = async (req, res) => {
     // const { email, password } = req.body;
@@ -233,12 +231,6 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
-
-
-
-
-
-
-
+  
 };
 
