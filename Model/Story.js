@@ -1,19 +1,20 @@
 import {Schema, model} from "mongoose";
 import Joi from "joi";
+import cron from "node-cron";
 
 const storySchema = new Schema({
     title: {
         type: String,
         required: true,
     },
-    description: {
+    description: { 
         type: String,
         required: true,
     },
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 86400,
+        expires: 8,
     },
     author: {
         type: Schema.Types.ObjectId,
@@ -41,4 +42,6 @@ const validateStory = (story) => {
     });
     return schema.validate(story);
 }
-export  {Story, validateStory} 
+
+
+export  {Story, validateStory } 
