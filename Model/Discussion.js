@@ -1,41 +1,44 @@
-// models/Discussion.js
 import mongoose from 'mongoose';
 
 const messageSchema = new mongoose.Schema({
     sender: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: true
     },
     content: {
         type: String,
-        required: true,
+        required: true
     },
     timestamp: {
         type: Date,
-        default: Date.now,
+        default: Date.now
     },
-    seenBy: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    }],
+    seen: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const discussionSchema = new mongoose.Schema({
-    participants: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-        }
-    ],
-    messages: [messageSchema],
     post: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Post',
+        required: true
     },
-});
+    initiator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    recipient: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    messages: [messageSchema]
+}, { timestamps: true });
 
 const Discussion = mongoose.model('Discussion', discussionSchema);
 
-export {Discussion};
+export { Discussion };

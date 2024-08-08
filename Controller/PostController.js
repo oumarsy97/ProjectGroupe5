@@ -1,20 +1,20 @@
-import { User,  Tailor,  } from "../Model/User.js";
-import { User } from '../Model/User.js';
+import { User, Tailor, } from "../Model/User.js";
+// import { User } from '../Model/User.js';
 import { Post } from '../Model/Post.js';
-import { Discussion } from '../Model/Discussion.js';
+import { Chat } from '../Model/Chat.js';
 
 export default class PostController {
     static create = async (req, res) => {
         const { title, description } = req.body;
         const idUser = req.userId;
         const files = req.files;
-        const tailor = await Tailor.findOne({ idUser });  
+        const tailor = await Tailor.findOne({ idUser });
         // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
-          return res.status(400).json({ message: 'You do not have enough credits', status: false });
+            return res.status(400).json({ message: 'You do not have enough credits', status: false });
         }
-     
+
 
         if (!files || files.length === 0) {
             return res.status(400).json({ message: 'No files uploaded', status: false });
@@ -33,29 +33,64 @@ export default class PostController {
     }
 
     static share = async (req, res) => {
-        const { postId, recipientId } = req.body;
+        const { postId, recipientIds, message } = req.body;
         const initiatorId = req.userId;
 
-        try {
-            const user = await User.findById(initiatorId);
-            const post = await Post.findById(postId);
-            const recipient = await User.findById(recipientId);
+        // Limiter le nombre de destinataires à 5
+        if (recipientIds.length > 5) {
+            return res.status(400).json({ message: 'Vous ne pouvez pas partager un post avec plus de 5 destinataires.', status: false });
+        }
 
-            if (!user || !post || !recipient) {
-                return res.status(404).json({ message: 'Utilisateur ou post non trouvé', status: false });
+        try {
+            // Vérifier si le post existe
+            const post = await Post.findById(postId);
+            if (!post) {
+                return res.status(404).json({ message: 'Post non trouvé', status: false });
             }
 
-            const newDiscussion = await Discussion.create({
-                post: postId,
-                initiator: initiatorId,
-                recipient: recipientId
-            });
+            // Créer ou mettre à jour une discussion pour chaque destinataire
+            const chats = [];
+            for (const recipientId of recipientIds) {
+                // Vérifier si une discussion existe déjà entre les utilisateurs
+                let chat = await Chat.findOne({ initiator: initiatorId, recipient: recipientId });
 
-            return res.status(201).json({ message: 'Discussion créée avec succès', data: newDiscussion, status: true });
+                if (!chat) {
+                    // Créer une nouvelle discussion si elle n'existe pas
+                    chat = await Chat.create({
+                        initiator: initiatorId,
+                        recipient: recipientId,
+                        messages: message ? [{
+                            sender: initiatorId,
+                            content: message,
+                            timestamp: new Date(),
+                            seen: false
+                        }] : []
+                    });
+                } else if (message) {
+                    // Ajouter le message à une discussion existante
+                    chat.messages.push({
+                        sender: initiatorId,
+                        content: message,
+                        timestamp: new Date(),
+                        seen: false
+                    });
+                    await chat.save();
+                }
+
+                chats.push(chat);
+
+                // Mettre à jour le post pour ajouter les partages
+                await Post.updateOne(
+                    { _id: postId },
+                    { $addToSet: { 'shares': { user: initiatorId, recipient: recipientId } } }
+                );
+            }
+
+            return res.status(200).json({ message: 'Post partagé avec succès', data: chats, status: true });
         } catch (error) {
             return res.status(400).json({ message: error.message, data: null, status: false });
         }
-    }
+    };
 
     static report = async (req, res) => {
         const { postId } = req.params;

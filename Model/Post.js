@@ -66,12 +66,22 @@ const postSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
     }],
-    shares: {
-        type: [{
+    shares: [{
+        user: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-        }],
-    },
+            required: true
+        },
+        recipient: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     reports: [{
         reportedBy: {
             type: Schema.Types.ObjectId,

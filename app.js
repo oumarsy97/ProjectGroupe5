@@ -4,7 +4,7 @@ import connectDB from './config/database.js';
 import UserRoute from './Route/UserRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
-// import ChatRoute from './Route/ChatRoute.js';
+import ChatRoute from './Route/ChatRoute.js';   
 
 config();
 import PostRoute from './Route/PostRoute.js';
@@ -26,7 +26,7 @@ app.use(`${process.env.BASE_URL}/users`, UserRoute);
 app.use(`${process.env.BASE_URL}/post`, PostRoute);
 app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
-// app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
+app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
  
 cron.schedule('* * * * *', async () => {

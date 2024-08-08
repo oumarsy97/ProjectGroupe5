@@ -1,4 +1,5 @@
 import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
+import upload from '../config/multerConfig.js'; // Import de la configuration multer
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import Utils from "../utils/utils.js";
@@ -6,29 +7,22 @@ import { Post } from "../Model/Post.js";
 
 export default class UserController {
   static addUser = async (req, res) => {
-    upload.single('photo')(req, res, async (err) => {
+    upload.single('photo')(req, res, async function (err) {
       if (err) {
-        console.error('Upload error:', err); // Log de l'erreur pour débogage
-        return res.status(500).json({ message: "Error processing file", data: null, status: 500 });
+        return res.status(400).json({ message: err.message, data: null, status: 400 });
       }
-
-      const { error } = validateUser(req.body);
-      if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
 
       const { firstname, lastname, email, password, role, phone, genre } = req.body;
-      let photoUrl = null;
-
-      // Vérifiez la structure de req.file
-      console.log('req.file:', req.file);
-
-      if (req.file && req.file.path) {
-        photoUrl = req.file.path;  // Utilisez req.file.path pour obtenir l'URL
+      const { error } = validateUser(req.body);
+      if (error) {
+        return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
       }
-
 
       try {
         let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        if (user) {
+          return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        }
 
         const newUser = await User.create({
           firstname,
@@ -36,7 +30,7 @@ export default class UserController {
           email,
           password: await Utils.criptPassword(password),
           role,
-          photo: photoUrl,  // Stockez l'URL de l'image
+          photo: req.file?.path, // Photo URL returned by Cloudinary
           phone,
           genre
         });
@@ -48,10 +42,7 @@ export default class UserController {
     });
   };
 
-
-
   static login = async (req, res) => {
-    // const { email, password } = req.body;
     try {
       const { email, password } = req.body;
       const user = await User.findOne({ email });
