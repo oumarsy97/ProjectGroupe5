@@ -22,8 +22,8 @@ app.use(`${process.env.BASE_URL}/users`, UserRoute);
 app.use(`${process.env.BASE_URL}/post`, PostRoute);
 app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
-
-cron.schedule('0 * * * *', async () => {
+ 
+cron.schedule('* * * * *', async () => {
     try {
         console.log('Deleting expired stories...'); 
         const now = new Date();
@@ -32,7 +32,7 @@ cron.schedule('0 * * * *', async () => {
     } catch (error) {
         console.error('Error deleting expired stories:', error);
     }
-});
+}); 
 
 
 const port = process.env.PORT || 3000;
