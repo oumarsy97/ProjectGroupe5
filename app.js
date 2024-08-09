@@ -29,11 +29,11 @@ app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
  
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 * * * *', async () => {
     try {
         console.log('Deleting expired stories...'); 
         const now = new Date();
-        const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 30) } });
+        const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 24 * 60 * 60 * 100) } });
         console.log(`Deleted ${result.deletedCount} expired stories`);
     } catch (error) {
         console.error('Error deleting expired stories:', error);

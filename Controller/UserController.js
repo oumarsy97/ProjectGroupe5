@@ -1,9 +1,8 @@
 import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
 import upload from '../config/multerConfig.js'; // Import de la configuration multer
-import bcrypt from "bcryptjs";
-import jwt from 'jsonwebtoken';
 import Utils from "../utils/utils.js";
-import { Post } from "../Model/Post.js";
+import GenerateCode from "../Model/GenerateCode.js";
+import Messenger from "../utils/Messenger.js";
 
 export default class UserController {
   static addUser = async (req, res) => {
@@ -11,21 +10,21 @@ export default class UserController {
       if (err) {
         return res.status(400).json({ message: err.message, data: null, status: 400 });
       }
-
-      const { firstname, lastname, email, password, role, phone, genre } = req.body;
+  
+      const { firtsname, lastname, email, password, role, phone, genre } = req.body;
       const { error } = validateUser(req.body);
       if (error) {
         return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
       }
-
+  
       try {
         let user = await User.findOne({ email });
         if (user) {
           return res.status(400).json({ message: "User already exists", data: user, status: 400 });
         }
-
+  
         const newUser = await User.create({
-          firstname,
+          firtsname,
           lastname,
           email,
           password: await Utils.criptPassword(password),
@@ -65,48 +64,23 @@ export default class UserController {
 
   //Tailor
 
-  static login = async (req, res) => {
-    // const { email, password } = req.body;
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
-      }
-      const isMatch = await Utils.comparePassword(password, user.password);
-
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
-      }
-      const token = Utils.generateToken(user);
-      console.log(token);
-      res.status(200).json({ message: "User logged in successfully", data: token, status: 200 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-
-  };
-
-  //Tailor
-
-  static addTailor = async (req, res) => {
-    const { error } = validateTailor(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-    try {
-      //creer dabord le user puis le tailor
-      const { firstname, lastname, email, password, address, description } = req.body;
-      //   console.log(firstname, lastname, email, password, address, description );
-      let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
-      const newuser = await User.create({ firstname, lastname, email, password: await Utils.criptPassword(password), role: "tailor" });
-      //   console.log(newuser);
-      const newtailor = await Tailor.create({ idUser: newuser._id, address, description });
-      res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  };
-
+      static addTailor = async (req, res) => {
+        const { error } = validateTailor(req.body);
+        if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+         try {  
+          //creer dabord le user puis le tailor
+          const {firtsname, lastname, email,phone, password, address, description } = req.body;
+        //   console.log(firtsname, lastname, email, password, address, description );
+          let user  = await User.findOne({ email });
+          if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
+          const newuser =await  User.create({ firtsname, lastname, email, phone, password:await Utils.criptPassword(password), role:"tailor" });
+        //   console.log(newuser);
+          const newtailor = await Tailor.create({ idUser:newuser._id, address, description });
+          res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
+        } catch (error) {
+          res.status(500).json({ message: error.message, data: null, status: 500 });
+        } 
+        };
 
   //lister Users
   static listUser = async (req, res) => {
@@ -133,7 +107,7 @@ export default class UserController {
         { $unwind: "$user" },
         {
           $project: {
-            _id: 1, address: 1, description: 1, 'firstname': '$user.firstname',
+            _id: 1, address: 1, description: 1, 'firtsname': '$user.firtsname',
             'lastname': '$user.lastname',
             'email': '$user.email',
             'role': '$user.role'
@@ -173,15 +147,15 @@ export default class UserController {
 
   //update tailor
   static updateTailor = async (req, res) => {
-    //   const { error } = validateTailor(req.body);
-    //   if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+      const { error } = validateTailor(req.body);
+      if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
     try {
       const { id } = req.params;
-      const { firstname, lastname, email, password, address, description } = req.body;
+      const { firtsname, lastname, email, password, address, description } = req.body;
       const tailor = await Tailor.findById(id);
       if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
       const userUpdate = {};
-      if (firstname) userUpdate.firstname = firstname;
+      if (firtsname) userUpdate.firtsname = firtsname;
       if (lastname) userUpdate.lastname = lastname;
       if (email) userUpdate.email = email;
       if (password) userUpdate.password = await Utils.criptPassword(password);
@@ -241,82 +215,50 @@ export default class UserController {
     }
   }
 
-
-
-
-
-  //repost 
-  static repost = async (req, res) => {
+  static addCredit = async (req, res) => {
     try {
-      const { idPost } = req.params;
       const idUser = req.userId;
+      const { code } = req.body;
       const user = await User.findById(idUser);
       if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-      const post = await Post.findById(idPost);
-      if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-      if (post.repost.includes(idUser)) return res.status(400).json({ message: "user already repost this post", data: null, status: 400 });
-      post.repost.push(idUser);
-      await post.save();
-      res.status(200).json({ message: "Post reposted successfully", data: post, status: 200 });
+      const mycode = await GenerateCode.findOne({ code: code });
+      if (!mycode) return res.status(404).json({ message: "Code not valide", data: null, status: 404 });
+      if(mycode.status === 'used') return res.status(400).json({ message: "Code already used", data: null, status: 400 });
+      const tailor = await Tailor.findOne({ idUser });
+      if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
+      const credits = tailor.credits + mycode.credits;
+      tailor.credits = credits;
+      mycode.status = 'used';
+      await mycode.save();
+      await tailor.save();
+      res.status(200).json({ message: "Credits added successfully", data: tailor, status: 200 });
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
 
-  static deleteRepost = async (req, res) => {
+  static achatCode = async (req, res) => {
     try {
-      const { idPost } = req.params;
       const idUser = req.userId;
       const user = await User.findById(idUser);
       if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-      const post = await Post.findById(idPost);
-      if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-      if (!post.repost.includes(idUser)) return res.status(400).json({ message: "user not repost this post", data: null, status: 400 });
-      const index = post.repost.indexOf(idUser);
-      post.repost.splice(index, 1);
-      await post.save();
-      res.status(200).json({ message: "Post deleted from repost successfully", data: post, status: 200 });
+      const {montant, modePaiement} = req.body;
+      if(montant<100) return res.status(400).json({ message: "Montant invalide", data: null, status: 400 });
+      const newGerenerateCode = {
+        montant, 
+        modePaiement,
+        code : Utils.Code(),
+        credits : montant / 100
+      }
+      const newcode = await GenerateCode.create(newGerenerateCode);
+      res.status(200).json({ message: "Code created successfully", data: newcode, status: 200 });
+      const recu = `Recu<br>Montant : ${newcode.montant}<br>Mode de paiement : ${newcode.modePaiement}<br>Code : ${newcode.code}<br>Credits : ${newcode.credits}<br> Date : ${newcode.createdAt}<br>expire dans 7 jours`;
+      Messenger.sendSms(user.phone, 'Tailor Digital', `Votre code de paiement est : ${recu}`);
+      Messenger.sendMail(user.email, 'Tailor Digital', `Votre code de paiement est : ${recu}`);
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
-  }
-
-  //comment
-  static comment = async (req, res) => {
-    try {
-      const { idPost } = req.params;
-      const idUser = req.userId;
-      const user = await User.findById(idUser);
-      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-      const post = await Post.findById(idPost);
-      if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-      if (post.comments.includes(idUser)) return res.status(400).json({ message: "user already comment this post", data: null, status: 400 });
-      post.comments.push(idUser);
-      await post.save();
-      res.status(200).json({ message: "Post commented successfully", data: post, status: 200 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  }
-
-  static deleteComment = async (req, res) => {
-    try {
-      const { idPost } = req.params;
-      const idUser = req.userId;
-      const user = await User.findById(idUser);
-      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-      const post = await Post.findById(idPost);
-      if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-      if (!post.comments.includes(idUser)) return res.status(400).json({ message: "user not comment this post", data: null, status: 400 });
-      const index = post.comments.indexOf(idUser);
-      post.comments.splice(index, 1);
-      await post.save();
-      res.status(200).json({ message: "Post deleted from comment successfully", data: post, status: 200 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  }
-
+  } 
 
 
 }

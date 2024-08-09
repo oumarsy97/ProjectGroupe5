@@ -11,7 +11,7 @@ export default class PostController {
         // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
-            return res.status(400).json({ message: 'You do not have enough credits', status: false });
+          return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
         }
 
 
@@ -20,6 +20,8 @@ export default class PostController {
         }
 
         try {
+          tailor.credits -= 10;
+          await tailor.save();
             // Obtenir les URLs Cloudinary des fichiers
             const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
 

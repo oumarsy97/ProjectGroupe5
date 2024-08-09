@@ -23,4 +23,12 @@ export default class Utils {
     
     };
 
+    static verifyToken = (token) => {
+        return jwt.verify(token, process.env.SECRET_KEY);
+    };
+
+    static Code = () => {
+        return Math.floor(1000 + Math.random() * 90000000000);
+    };
+
 };
