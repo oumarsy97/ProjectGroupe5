@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import Joi from "joi";
 
 const userSchema = new Schema({
-    firtsname: {
+    firstname: {
         type: String,
         required: true,
     },
@@ -13,10 +13,11 @@ const userSchema = new Schema({
     email: {
         type: String,
         required: true,
+        unique: true, // Assurez-vous que l'email est unique
     },
     password: {
         type: String,
-        // required: true,
+        required: true,
     },
     genre: {
         type: String,
@@ -38,7 +39,6 @@ const userSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: "Post",
             default: [],
-            required: true,
         },
     ],
     created: {
@@ -48,18 +48,19 @@ const userSchema = new Schema({
 });
 
 const User = model("User", userSchema);
+
 const validateUser = (user) => {
     const schema = Joi.object({
-        firtsname: Joi.string().min(3).max(30).required(),
+        firstname: Joi.string().min(3).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().min(6).required().messages({
             'string.empty': 'Password cannot be empty',
             'string.min': 'Password must be at least 6 characters long'
-        }), 
+        }),
         role: Joi.string(),
         photo: Joi.string(),
-        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
+        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')).required(),
         genre: Joi.string().valid("man", "woman"),
     });
 
@@ -68,8 +69,9 @@ const validateUser = (user) => {
 
 
 
+
 //Tailor
-const TailorSchema = new Schema({
+const tailorSchema = new Schema({
     idUser: {
         type: Schema.Types.ObjectId,
         ref: "User",
@@ -88,35 +90,30 @@ const TailorSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: "User"
         }],
-
     created: {
         type: Date,
         default: Date.now
     },
-
-credits: {
-    type: Number,
-    default: 50
-},
-
-
+    credits: {
+        type: Number,
+        default: 50
+    },
 });
 
-const Tailor = model("Tailor", TailorSchema);
+const Tailor = model("Tailor", tailorSchema);
+
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-         firtsname: Joi.string().min(3).max(30).required(),
+        firstname: Joi.string().min(3).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
-        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
+        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')).required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(6).required(),
-      address: Joi.string().required(),
-      description: Joi.string().required(),
+        address: Joi.string().required(),
+        description: Joi.string().required(),
     });
 
     return schema.validate(tailor);
-}
+};
+
 export { User, validateUser, Tailor, validateTailor };
-
-
-
