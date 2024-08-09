@@ -286,43 +286,46 @@ export default class UserController {
 
   static search = async (req, res) => {
     try {
-      const { search } = req.body; // Récupérer la valeur de recherche
+      const { search } = req.body;
       if (!search) {
-        const formattedTailors = await this.getTopTailors(req, res); // Appel de la méthode pour obtenir les meilleurs tailleurs
+        const formattedTailors = await this.getTopTailors(req, res);
         return res.status(200).json({ message: "There are the top 10 tailors", data: formattedTailors, status: 200 });
       }
-
-      // Recherche des tailleurs correspondant à la valeur de recherche dans firstname et lastname
       const tailors = await Tailor.aggregate([
         {
-          $lookup: {
-            from: "users",
-            localField: "idUser",
-            foreignField: "_id",
-            as: "user",
-          },
+            $lookup: {
+                from: "users",
+                localField: "idUser",
+                foreignField: "_id",
+                as: "user",
+            },
         },
         { $unwind: "$user" },
         {
-          $match: {
-            $or: [
-              { 'user.firstname': { $regex: search, $options: 'i' } },
-              { 'user.lastname': { $regex: search, $options: 'i' } }
-            ]
-          }
+            $match: {
+                $and: [ // Utilisation de $and pour combiner les conditions
+                    {
+                        $or: [
+                            { 'user.firstname': { $regex: search, $options: 'i' } },
+                            { 'user.lastname': { $regex: search, $options: 'i' } }
+                        ]
+                    },
+                    { 'user.role': 'tailor' }
+                ]
+            }
         },
         {
-          $project: {
-            _id: 1,
-            address: 1,
-            description: 1,
-            firstname: "$user.firstname",
-            lastname: "$user.lastname",
-            email: "$user.email",
-            role: "$user.role"
-        }
+            $project: {
+                _id: 1,
+                address: 1,
+                description: 1,
+                firstname: "$user.firstname",
+                lastname: "$user.lastname",
+                email: "$user.email",
+                role: "$user.role"
+            }
         },
-      ]);
+    ]);
 
       res.status(200).json({ message: "Tailors retrieved successfully", data: tailors, status: 200 });
     } catch (error) {
