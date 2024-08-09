@@ -18,7 +18,7 @@ const chatSchema = new mongoose.Schema({
                 ref: 'User',
                 required: true
             },
-            content: {
+            text: {
                 type: String,
                 required: true
             },
@@ -29,7 +29,11 @@ const chatSchema = new mongoose.Schema({
             seen: {
                 type: Boolean,
                 default: false
-            }
+            },
+            content: [{
+                type: String,
+                required: true,
+            }],
         }
     ]
 }, { timestamps: true });
