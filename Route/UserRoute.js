@@ -12,6 +12,7 @@ router.get("/addfavoris/:idPost",Middleware.auth, UserController.addFavoris);
 router.delete("/deletefavoris/:idPost",Middleware.auth, UserController.deleteFavoris);
 router.post("/addcredits",Middleware.auth,Middleware.isanTailor, UserController.addCredit);
 router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.achatCode);
+router.put("/becomeTailor/:id", Middleware.auth, UserController.becomeTailor);
 
 // Edit User profile
 router.put("/edituser/:idUser", Middleware.auth, UserController.editUser);
