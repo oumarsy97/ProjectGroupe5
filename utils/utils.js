@@ -19,8 +19,16 @@ export default class Utils {
     };
 
     static generateToken = (user) => {
-        return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '1h' });
+        return jwt.sign({ id: user.id }, process.env.SECRET_KEY, { expiresIn: '23h' });
     
+    };
+
+    static verifyToken = (token) => {
+        return jwt.verify(token, process.env.SECRET_KEY);
+    };
+
+    static Code = () => {
+        return Math.floor(1000 + Math.random() * 90000000000);
     };
 
 };

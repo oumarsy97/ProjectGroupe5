@@ -21,8 +21,20 @@ const postSchema = new Schema({
         required: true,
     },
     description: {
-        type: String,
-        required: true,
+        gender: {
+            type: String,
+            enum: ["homme", "femme", "enfant garçon", "enfant fille"],
+            required: true
+        },
+        size: {
+            type: String,
+            enum: ["s", "xs", "m", "l", "xl", "xxl", "3xl"],
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        }
     },
     createdAt: {
         type: Date,
@@ -56,23 +68,18 @@ const postSchema = new Schema({
         enum: ["public", "friends"],
         default: "public",
     },
-    mentions: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: 'Tailor',
-        }],
-    },
-
+    mentions: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Tailor',
+    }],
     repost: [{
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
     }],
-    shares: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: 'User',
-        }],
-    }
+    shares: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+    }],
 });
 
 const Post = model("Post", postSchema);

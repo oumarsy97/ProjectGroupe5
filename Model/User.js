@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import Joi from "joi";
 
 const userSchema = new Schema({
-    firstname: {
+    firtsname: {
         type: String,
         required: true,
     },
@@ -24,7 +24,10 @@ const userSchema = new Schema({
         default: "man",
     },
     photo: String,
-    phone: String,
+    phone: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         enum: ["tailor", "user"],
@@ -47,13 +50,13 @@ const userSchema = new Schema({
 const User = model("User", userSchema);
 const validateUser = (user) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
+        firtsname: Joi.string().min(3).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().min(6).required().messages({
             'string.empty': 'Password cannot be empty',
             'string.min': 'Password must be at least 6 characters long'
-        }),
+        }), 
         role: Joi.string(),
         photo: Joi.string(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
@@ -78,21 +81,36 @@ const TailorSchema = new Schema({
     },
     description: {
         type: String,
-        required: true
+        required: true 
     },
     follows: [
         {
             type: Schema.Types.ObjectId,
             ref: "User"
-        }]
+        }],
+
+    created: {
+        type: Date,
+        default: Date.now
+    },
+
+credits: {
+    type: Number,
+    default: 50
+},
+freePostsUsed: {
+    type: Number,
+    default: 0
+}
 
 });
 
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
-        lastname: Joi.string().min(3).max(30).required(),
+         firtsname: Joi.string().min(3).max(30).required(),
+        lastname: Joi.string().min(2).max(30).required(),
+        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
         email: Joi.string().email().required(),
         password: Joi.string().min(6).required(),
       address: Joi.string().required(),

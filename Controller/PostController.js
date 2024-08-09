@@ -1,27 +1,167 @@
+import { User,  Tailor,  } from "../Model/User.js";
 import { Post } from '../Model/Post.js';
-import { User } from '../Model/User.js';
+import joi from "joi";
 
 export default class PostController{
     static create = async (req, res) => {
-        const { title, description } = req.body;
-        const author = req.userId;
+        const { title, description, gender, size } = req.body;
+        const idUser = req.userId;
         const files = req.files;
     
-        if (!files || files.length === 0) {
-          return res.status(400).json({ message: 'No files uploaded', status: false });
+        // Validation avec Joi
+        const schema = joi.object({
+            title: joi.string().required(),
+            description: joi.string().required(),
+            gender: joi.string().valid("homme", "femme", "enfant garçon", "enfant fille").required(),
+            size: joi.string().valid("s", "xs", "m", "l", "xl", "xxl", "3xl").required(),
+        });
+    
+        const { error } = schema.validate({ title, description, gender, size });
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message, status: false });
         }
     
         try {
-          // Obtenir les URLs Cloudinary des fichiers
-          const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
+            const tailor = await Tailor.findOne({ idUser });
+            if (!tailor) {
+                return res.status(404).json({ message: 'Tailor not found', status: false });
+            }
     
-          const newPost = await Post.create({ title, description, content: contentUrls, author });
-          res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded', status: false });
+            }
+    
+            // Gestion des crédits et des posts gratuits
+            let isFreePost = false;
+            if (tailor.credits < 10) {
+                if (tailor.freePostsUsed < 5) {
+                    tailor.freePostsUsed += 1; // Incrémenter le nombre de posts gratuits utilisés
+                    isFreePost = true;
+                } else {
+                    return res.status(400).json({ 
+                        message: 'You have used all 5 free posts and do not have enough credits. Please recharge your account to continue posting.', 
+                        status: false 
+                    });
+                }
+            }
+    
+            // Obtenir les URLs Cloudinary des fichiers
+            const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
+    
+            // Créer le nouveau post avec la description enrichie
+            const newPost = await Post.create({ 
+                title, 
+                description: { gender, size, text: description }, 
+                content: contentUrls, 
+                author: idUser 
+            });
+    
+            // Déduire les crédits si le tailleur en a utilisé
+            if (!isFreePost && tailor.credits >= 10) {
+                tailor.credits -= 10;
+            }
+    
+            await tailor.save();
+    
+            // Envoyer la réponse avec le nouveau post et le nombre de crédits restants
+            res.status(201).json({ 
+                message: isFreePost 
+                    ? 'You have created a post using a free post. You have ' + (5 - tailor.freePostsUsed) + ' free posts remaining.' 
+                    : 'Post created successfully', 
+                data: newPost, 
+                remainingCredits: tailor.credits,
+                status: true 
+            });
         } catch (error) {
-          res.status(400).json({ message: error.message, data: null, status: false });
+            res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
-            
+    };
+    
+    
+    
+
+// Share and report functions
+static share = async (req, res) => {
+  const { postId, recipientIds, message } = req.body;
+  const initiatorId = req.userId;
+
+  // Limiter le nombre de destinataires à 5
+  if (recipientIds.length > 5) {
+      return res.status(400).json({ message: 'Vous ne pouvez pas partager un post avec plus de 5 destinataires.', status: false });
+  }
+
+  try {
+      // Vérifier si le post existe
+      const post = await Post.findById(postId);
+      if (!post) {
+          return res.status(404).json({ message: 'Post non trouvé', status: false });
+      }
+
+      // Créer ou mettre à jour une discussion pour chaque destinataire
+      const chats = [];
+      for (const recipientId of recipientIds) {
+          // Vérifier si une discussion existe déjà entre les utilisateurs
+          let chat = await Chat.findOne({ initiator: initiatorId, recipient: recipientId });
+
+          if (!chat) {
+              // Créer une nouvelle discussion si elle n'existe pas
+              chat = await Chat.create({
+                  initiator: initiatorId,
+                  recipient: recipientId,
+                  messages: message ? [{
+                      sender: initiatorId,
+                      content: message,
+                      timestamp: new Date(),
+                      seen: false
+                  }] : []
+              });
+          } else if (message) {
+              // Ajouter le message à une discussion existante
+              chat.messages.push({
+                  sender: initiatorId,
+                  content: message,
+                  timestamp: new Date(),
+                  seen: false
+              });
+              await chat.save();
+          }
+
+          chats.push(chat);
+
+          // Mettre à jour le post pour ajouter les partages
+          await Post.updateOne(
+              { _id: postId },
+              { $addToSet: { 'shares': { user: initiatorId, recipient: recipientId } } }
+          );
+      }
+
+      return res.status(200).json({ message: 'Post partagé avec succès', data: chats, status: true });
+  } catch (error) {
+      return res.status(400).json({ message: error.message, data: null, status: false });
+  }
+};
+
+static report = async (req, res) => {
+  const { postId } = req.params;
+  const { reason } = req.body;
+  const reportedBy = req.userId;
+  console.log(reportedBy, reason, postId);
+
+  try {
+      const post = await Post.findById(postId);
+      if (!post) {
+          return res.status(404).json({ message: 'Post not found', status: false });
+      }
+
+      post.reports.push({ reportedBy, reason });
+      await post.save();
+
+      res.status(200).json({ message: 'Post reported successfully', data: post.reports, status: true });
+  } catch (error) {
+      res.status(400).json({ message: error.message, data: null, status: false });
+  }
+}
+
 
 //get all posts
     static getAllPosts = async (req, res) => {

@@ -20,7 +20,6 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
-    // Define allowed file types
     const allowedMimeTypes = /jpeg|jpg|png|mp4|avi|mkv/;
     const mimeType = allowedMimeTypes.test(file.mimetype);
     const extname = allowedMimeTypes.test(file.originalname.split('.').pop().toLowerCase());
@@ -30,7 +29,8 @@ const upload = multer({
     } else {
       cb(new Error('Invalid file type. Only JPEG, PNG, MP4, AVI, and MKV are allowed.'));
     }
-  },
-});
+  }
+}).array('files', 5); // Assurez-vous que 'files' correspond au nom du champ
+
 
 export default upload;
