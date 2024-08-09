@@ -11,31 +11,61 @@ export default class PostController {
         // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
-          return res.status(400).json({ message: 'You do not have enough credits', status: false });
+          return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
         }
-     
-
         if (!files || files.length === 0) {
-            return res.status(400).json({ message: 'No files uploaded', status: false });
+          return res.status(400).json({ message: 'No files uploaded', status: false });
         }
-
         try {
-            // Obtenir les URLs Cloudinary des fichiers
-            const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
-
-            const newPost = await Post.create({ title, description, content: contentUrls, author });
-            res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
-
+          // Obtenir les URLs Cloudinary des fichiers
+          const contentUrls = files.map(file => file.path); // file.path contient l'URL Cloudinary
+          const newPost = await Post.create({ title, description, content: contentUrls, author:idUser });
+          res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+          tailor.credits -= 10;
+          await tailor.save();
         } catch (error) {
-            res.status(400).json({ message: error.message, data: null, status: false });
-            res.status(400).json({ message: error.message, data: null, status: false });
+          res.status(400).json({ message: error.message, data: null, status: false });
         }
-    }
-
+      };
+      // delete post
+      static delete = async (req, res) => {
+        const { postId } = req.params;
+        const userId = req.userId;
+        try {
+          const post = await Post.findById(postId);
+          if (!post || post.author.toString()!== userId) {
+            return res.status(404).json({ message: 'Post not found or not owned by the user', status: false });
+          }
+          await Post.findByIdAndDelete(postId);
+          res.status(200).json({ message: 'Post deleted successfully', data: null, status: true });
+        } catch (error) {
+          res.status(400).json({ message: error.message, data: null, status: false });
+        }
+      };
+      //update post
+      static update = async (req, res) => {
+        const { postId } = req.params;
+        const userId = req.userId;
+        const { title, description } = req.body;
+        try {
+          const post = await Post.findById(postId);
+          if (!post || post.author.toString()!== userId) {
+            return res.status(404).json({ message: 'Post not found or not owned by the user', status: false });
+          }
+          post.title = title;
+          post.description = description;
+          await post.save();
+          res.status(200).json({ message: 'Post updated successfully', data: post, status: true });
+        } catch (error) {
+          res.status(400).json({ message: error.message, data: null, status: false });
+        }
+      };
+    
+      // get all posts
+      static getAllPosts
     static share = async (req, res) => {
         const { postId, recipientId } = req.body;
         const initiatorId = req.userId;
-
         try {
             const user = await User.findById(initiatorId);
             const post = await Post.findById(postId);
@@ -44,31 +74,26 @@ export default class PostController {
             if (!user || !post || !recipient) {
                 return res.status(404).json({ message: 'Utilisateur ou post non trouvé', status: false });
             }
-
             const newDiscussion = await Discussion.create({
                 post: postId,
                 initiator: initiatorId,
                 recipient: recipientId
             });
-
             return res.status(201).json({ message: 'Discussion créée avec succès', data: newDiscussion, status: true });
         } catch (error) {
             return res.status(400).json({ message: error.message, data: null, status: false });
         }
     }
-
     static report = async (req, res) => {
         const { postId } = req.params;
         const { reason } = req.body;
         const reportedBy = req.userId;
         console.log(reportedBy, reason, postId);
-
         try {
             const post = await Post.findById(postId);
             if (!post) {
                 return res.status(404).json({ message: 'Post not found', status: false });
             }
-
             post.reports.push({ reportedBy, reason });
             await post.save();
 
@@ -77,8 +102,6 @@ export default class PostController {
             res.status(400).json({ message: error.message, data: null, status: false });
         }
     }
-
-    
         //get all posts
     static getAllPosts = async (req, res) => {
         try {
@@ -125,11 +148,9 @@ export default class PostController {
         try {
             let author;
             const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                 author = req.params.id;
-            }else{
-
-                 author = req.userId;
+            author = req.params.id;
+            if (!author) {
+                author = req.userId
             }
             const post = await Post.findOne({ author });
             console.log(post);
@@ -141,24 +162,8 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-    
     //delete post by id
-    static deletePost = async (req, res) => {
-        try {
-            const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can delete posts", data: null, status: false });
-            }
-            const post = await Post.findByIdAndDelete(req.params.id);
-            if (!post) {
-                return res.status(404).json({ message: "Post not found", data: null, status: false });
-            }
-            res.status(200).json({ message: "Post deleted", data: post, status: true });
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
+    
     //update post by id
     static updatePost = async (req, res) => {
         try {
@@ -180,24 +185,24 @@ export default class PostController {
         try {
             const likerId = req.userId; 
             const likedId = req.params.id; 
-
-            console.log("likerId:", likerId);
-            console.log("likedId:", likedId);
-
-            const liker = await User.findById(likerId); 
+            console.log(likerId, likedId);
             const post = await Post.findById(likedId); 
-            // Vérification si l'utilisateur ou le post existe
-            // if (!liker || !post) {
-            //     return res.status(404).json({ message: "User or Post not found", data: null, status: false });
-            // }
+            
+            // Vérifier si l'utilisateur a déjà liké le post
             const likeIndex = post.likes.findIndex(like => like.likerId.toString() === likerId);
+            
             if (likeIndex !== -1) {
-                // Si l'utilisateur a déjà liké le post, supprimez le like
+                // Si l'utilisateur a déjà liké le post, retirer le like
                 post.likes.splice(likeIndex, 1);
                 await post.save();
                 return res.status(200).json({ message: "Like removed", data: post, status: true });
             } else {
-                // Si l'utilisateur n'a pas encore liké le post, ajoutez un like
+                // Retirer le dislike si l'utilisateur avait disliké le post
+                const dislikeIndex = post.dislikes.findIndex(dislike => dislike.likerId.toString() === likerId);
+                if (dislikeIndex !== -1) {
+                    post.dislikes.splice(dislikeIndex, 1);
+                }
+                // Ajouter un like
                 post.likes.push({ likerId, likedId });
                 await post.save();
                 return res.status(200).json({ message: "Post liked", data: post, status: true });
@@ -206,38 +211,36 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-    // static dislikePost = async (req, res) => {
-    //     try {
-    //         const dislikerId = req.userId; 
-    //         const dislikedId = req.params.id; 
+   //dislikes a post
+   static dislikePost = async (req, res) => {
+    try {
+        const dislikerId = req.userId; 
+        const dislikedId = req.params.id; 
+        const post = await Post.findById(dislikedId); 
+        
+        // Vérifier si l'utilisateur a déjà disliké le post
+        const dislikeIndex = post.dislikes.findIndex(dislike => dislike.dislikerId.toString() === dislikerId);
+        if (dislikeIndex !== -1) {
+            // Si l'utilisateur a déjà disliké le post, retirer le dislike
+            post.dislikes.splice(dislikeIndex, 1);
+            await post.save();
+            return res.status(200).json({ message: "Dislike removed", data: post, status: true });
+        } else {
+            // Retirer le like si l'utilisateur avait liké le post
+            const likeIndex = post.likes.findIndex(like => like.likerId.toString() === dislikerId);
+            if (likeIndex !== -1) {
+                post.likes.splice(likeIndex, 1);
+            }
+            // Ajouter un dislike
+            post.dislikes.push({ dislikerId, dislikedId });
+            await post.save();
+            return res.status(200).json({ message: "Post disliked", data: post, status: true });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
 
-    //         console.log("likerId:", dislikerId);
-    //         console.log("likedId:", dislikedId);
-
-    //         const liker = await User.findById(dislikerId); 
-    //         const post = await Post.findById(dislikedId); 
-    //         // Vérification si l'utilisateur ou le post existe
-    //         // if (!liker || !post) {
-    //         //     return res.status(404).json({ message: "User or Post not found", data: null, status: false });
-    //         // }
-    //         const likeIndex = post.likes.findIndex(like => like.likerId.toString() === dislikerId);
-    //         if (likeIndex !== -1) {
-    //             // Si l'utilisateur a déjà liké le post, supprimez le like
-    //             post.dislikes.splice(likeIndex, 1);
-    //             await post.save();
-    //             return res.status(200).json({ message: "Like removed", data: post, status: true });
-    //         } else {
-    //             // Si l'utilisateur n'a pas encore liké le post, ajoutez un like
-    //             post.dislikes.push({ dislikerId, dislikedId });
-    //             await post.save();
-    //             return res.status(200).json({ message: "Post liked", data: post, status: true });
-    //         }
-    //     } catch (error) {
-    //         res.status(500).json({ message: error.message });
-    //     }
-    // }
-    
-    
     //repost 
     static repost = async (req, res) => {
         try {
@@ -257,7 +260,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
     //delete repost
     static deleteRepost = async (req, res) => {
         try {
@@ -276,7 +278,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
     //comment a post
     static comment = async (req, res) => {
         try {
@@ -299,7 +300,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
     //delete comment
     static deleteComment = async (req, res) => {
         try {
@@ -323,7 +323,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
 }
 
 

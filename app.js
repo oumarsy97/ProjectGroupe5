@@ -29,16 +29,16 @@ app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 // app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
  
-cron.schedule('* * * * *', async () => {
-    try {
-        console.log('Deleting expired stories...'); 
-        const now = new Date();
-        const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 30) } });
-        console.log(`Deleted ${result.deletedCount} expired stories`);
-    } catch (error) {
-        console.error('Error deleting expired stories:', error);
-    }
-}); 
+// cron.schedule('0 * * * *', async () => {
+//     try {
+//         console.log('Deleting expired stories...'); 
+//         const now = new Date();
+//         const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 30) } });
+//         console.log(`Deleted ${result.deletedCount} expired stories`);
+//     } catch (error) {
+//         console.error('Error deleting expired stories:', error);
+//     }
+// }); 
 
 
 const port = process.env.PORT || 5000;
