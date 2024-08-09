@@ -1,34 +1,55 @@
+import Joi from "joi";
 import { User,  Tailor,  } from "../Model/User.js";
 import { Post } from '../Model/Post.js';
 
-export default class PostController{
+const joi = Joi;
+
+export default class PostController {
     static create = async (req, res) => {
-        const { title, description } = req.body;
+        const { title, description, gender, size } = req.body;
         const idUser = req.userId;
         const files = req.files;
-        const tailor = await Tailor.findOne({ idUser });  
-        // console.log(tailor);  
-        //verifer si il au moins 10 credits 
-        if (tailor.credits < 10) {
-          return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
+
+        // Validation avec Joi
+        const schema = joi.object({
+            title: joi.string().required(),
+            description: joi.string().required(),
+            gender: joi.string().valid("homme", "femme", "enfant garçon", "enfant fille").required(),
+            size: joi.string().valid("s", "xs", "m", "l", "xl", "xxl", "3xl").required(),
+        });
+
+        const { error } = schema.validate({ title, description, gender, size });
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message, status: false });
         }
-     
-        if (!files || files.length === 0) {
-          return res.status(400).json({ message: 'No files uploaded', status: false });
-        }
-    
+
         try {
-          // Obtenir les URLs Cloudinary des fichiers
-          const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
+            const tailor = await Tailor.findOne({ idUser });
+            if (tailor.credits < 10) {
+                return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
+            }
+
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded', status: false });
+            }
+
+            // Obtenir les URLs Cloudinary des fichiers
+            const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
             
-          const newPost = await Post.create({ title, description, content: contentUrls, author:idUser });
-          res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
-          tailor.credits -= 10;
-          await tailor.save();
+            const newPost = await Post.create({ 
+                title, 
+                description: { gender, size, text: description }, 
+                content: contentUrls, 
+                author: idUser 
+            });
+            res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+            tailor.credits -= 10;
+            await tailor.save();
         } catch (error) {
-          res.status(400).json({ message: error.message, data: null, status: false });
+            res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
+    };
+
             
 
 //get all posts
