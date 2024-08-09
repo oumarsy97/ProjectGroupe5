@@ -173,10 +173,13 @@ export default class UserController {
         { $unwind: "$user" },
         {
           $project: {
-            _id: 1, address: 1, description: 1, 'firstname': '$user.firstname',
-            'lastname': '$user.lastname',
-            'email': '$user.email',
-            'role': '$user.role'
+            _id: 1,
+            address: 1,
+            description: 1,
+            firstname: "$user.firstname",
+            lastname: "$user.lastname",
+            email: "$user.email",
+            role: "$user.role"
           }
         },
       ]);
@@ -280,7 +283,74 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
-  
 
+  static search = async (req, res) => {
+    try {
+      const { search } = req.body; // Récupérer la valeur de recherche
+      if (!search) {
+        const formattedTailors = await this.getTopTailors(req, res); // Appel de la méthode pour obtenir les meilleurs tailleurs
+        return res.status(200).json({ message: "There are the top 10 tailors", data: formattedTailors, status: 200 });
+      }
 
+      // Recherche des tailleurs correspondant à la valeur de recherche dans firstname et lastname
+      const tailors = await Tailor.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "idUser",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $match: {
+            $or: [
+              { 'user.firstname': { $regex: search, $options: 'i' } },
+              { 'user.lastname': { $regex: search, $options: 'i' } }
+            ]
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            address: 1,
+            description: 1,
+            firstname: "$user.firstname",
+            lastname: "$user.lastname",
+            email: "$user.email",
+            role: "$user.role"
+        }
+        },
+      ]);
+
+      res.status(200).json({ message: "Tailors retrieved successfully", data: tailors, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
     }
+  }
+
+  static getTopTailors = async (req, res) => {
+      try {
+          const topTailors = await Tailor.find()
+              .sort({ votes: -1 })
+              .limit(10)
+              .populate('idUser', 'firstname lastname') // Assurez-vous que ces champs existent
+              .select('votes');
+          const formattedTailors = topTailors.map(tailor => ({
+              tailorname: `${tailor.idUser?.firstname || 'Unknown'} ${tailor.idUser?.lastname || 'Unknown'}`, // Utilisation de l'opérateur de coalescence
+              votes: tailor.votes
+          }));
+          console.log(formattedTailors);
+          res.status(200).json({
+              message: "Top tailors retrieved",
+              data: formattedTailors,
+              status: true
+          });
+          return formattedTailors;
+      } catch (error) {
+          res.status(500).json({ message: error.message });
+      }
+  }
+
+  }

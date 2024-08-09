@@ -84,7 +84,11 @@ const TailorSchema = new Schema({
         {
             type: Schema.Types.ObjectId,
             ref: "User"
-        }]
+        }],
+    votes : {
+        type: Number,
+        required: true,
+    }
 
 });
 

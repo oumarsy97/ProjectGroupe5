@@ -16,5 +16,6 @@ PostRoute.get('/getAllPosts',Middleware.auth,Middleware.isanTailor, PostControll
 // PostRoute.delete('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostController.deleteRepost);
 PostRoute.get('/getAllPosts', PostController.getAllPosts);
 PostRoute.get('/getPostById',Middleware.auth, Middleware.isanTailor, PostController.getPostById);
+PostRoute.get('/notePost', Middleware.auth, PostController.noterPost);
 
 export default PostRoute;

@@ -15,6 +15,18 @@ const commentSchema = new Schema({
         default: Date.now
     }
 });
+
+const notesSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    note: {
+        type: Number,
+        required: true
+    }
+});
 const postSchema = new Schema({
     title: {
         type: String,
@@ -51,6 +63,7 @@ const postSchema = new Schema({
         type: Number,
         default: 0,
     },
+    notes: [notesSchema],
     visibility: {
         type: String,
         enum: ["public", "friends"],

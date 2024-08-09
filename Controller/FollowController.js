@@ -1,5 +1,6 @@
 import dns from 'dns';
 import { User, Tailor } from "../Model/User.js";
+import mongoose from "mongoose";
 dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google's DNS servers
 import { Follow, validateFollow } from "../Model/Follow.js";
 
@@ -42,22 +43,40 @@ export default class FollowController {
     static getFollowers = async (req, res) => {
         const { error } = validateFollow(req.body);
         if (error) return res.status(400).json({ error: error.details[0].message });
+    
         try {
-            const followedId = req.body;
-            const followers = await Follow.find({ followedId });
+            let followedId;
+            followedId = req.params.id;
+            if (!followedId) {
+                followedId = req.userId;
+            }
+            const objectId = new mongoose.Types.ObjectId(followedId);
+            console.log("id"+objectId);
+            const followers = await Follow.find({ followedId: objectId });
+            console.log(followers);
+    
             res.status(200).json(followers);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
-    }
+    }  
 
     static getFollowing = async (req, res) => {
         const { error } = validateFollow(req.body);
         if (error) return res.status(400).json({ error: error.details[0].message });
+    
         try {
-            const followedId = req.id;
-            const following = await Follow.find({ followerId: followedId });
-            res.status(200).json(following);
+            let followerId;
+            followerId = req.params.id;
+            if (!followerId) {
+                followerId = req.userId;
+            }
+            const objectId = new mongoose.Types.ObjectId(followerId);
+            console.log("id"+objectId);
+            const followers = await Follow.find({ followerId: objectId });
+            console.log(followers);
+    
+            res.status(200).json(followers);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
