@@ -51,6 +51,21 @@ const postSchema = new Schema({
         type: Number,
         default: 0,
     },
+    ratings: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        score: {
+            type: Number,
+            min: 1,
+            max: 5,
+        }
+    }],
+    averageRating: {
+        type: Number,
+        default: 0,
+    },
     visibility: {
         type: String,
         enum: ["public", "friends"],

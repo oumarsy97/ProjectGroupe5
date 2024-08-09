@@ -15,6 +15,8 @@ PostRoute.get('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostCont
 PostRoute.delete('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostController.deleteRepost);
 PostRoute.post('/report/:postId',Middleware.auth, Middleware.isanTailor, PostController.report);
 PostRoute.post('/share', Middleware.auth, Middleware.isanTailor, PostController.share);
+PostRoute.post('/view/:postId', Middleware.auth, PostController.viewPost);
+PostRoute.get('/topTailors', PostController.getTopTailors);
 
 
-export default PostRoute 
+export default PostRoute

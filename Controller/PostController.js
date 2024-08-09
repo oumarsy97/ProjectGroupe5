@@ -1,5 +1,4 @@
-import { User, Tailor, } from "../Model/User.js";
-// import { User } from '../Model/User.js';
+import { User, Tailor } from '../Model/User.js';
 import { Post } from '../Model/Post.js';
 import { Chat } from '../Model/Chat.js';
 
@@ -302,5 +301,61 @@ export default class PostController {
         }
     }
 
+    static viewPost = async (req, res) => {
+        try {
+            const { postId } = req.params;
+            const userId = req.userId;
 
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found", status: false });
+            }
+
+            // Vérifier si l'utilisateur est un tailleur
+            const isTailor = await Tailor.findOne({ idUser: userId });
+            if (isTailor) {
+                return res.status(403).json({ message: "Tailors cannot view their own posts", status: false });
+            }
+
+            const post = await Post.findById(postId);
+            if (!post) {
+                return res.status(404).json({ message: "Post not found", status: false });
+            }
+
+            // Vérifier si l'auteur du post est le même que l'utilisateur actuel
+            if (post.author.toString() === userId) {
+                return res.status(403).json({ message: "You cannot view your own post", status: false });
+            }
+
+            post.views += 1;
+            await post.save();
+
+            res.status(200).json({ message: "Post viewed", data: post, status: true });
+        } catch (error) {
+            console.error("Error in viewPost:", error);
+            res.status(500).json({ message: "An error occurred while viewing the post", error: error.message });
+        }
+    }
+
+    static getTopTailors = async (req, res) => {
+        try {
+            const topTailors = await Tailor.find()
+                .sort({ averageRating: -1, totalRatings: -1 })
+                .limit(10)
+                .populate('idUser', 'firtsname lastname')
+                .select('totalRatings');
+            const formattedTailors = topTailors.map(tailor => ({
+                tailorname: `${tailor.idUser.firtsname} ${tailor.idUser.lastname}`,
+                // averageRating: tailor.averageRating,
+                totalRatings: tailor.totalRatings
+            }));
+            res.status(200).json({
+                message: "Top tailors retrieved",
+                data: formattedTailors,
+                status: true
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    }
 }

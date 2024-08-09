@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import Joi from "joi";
 
 const userSchema = new Schema({
-    firstname: {
+    firtsname: {
         type: String,
         required: true,
     },
@@ -53,7 +53,7 @@ const validateUser = (user) => {
         password: Joi.string().trim().min(6).required().messages({
             'string.empty': 'Password cannot be empty',
             'string.min': 'Password must be at least 6 characters long'
-        }), 
+        }),
         role: Joi.string(),
         photo: Joi.string(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
@@ -77,7 +77,15 @@ const TailorSchema = new Schema({
     },
     description: {
         type: String,
-        required: true 
+        required: true
+    },
+    averageRating: {
+        type: Number,
+        default: 0,
+    },
+    totalRatings: {
+        type: Number,
+        default: 0,
     },
     follows: [
         {
@@ -90,13 +98,12 @@ const TailorSchema = new Schema({
         default: Date.now
     },
 
-credits: {
-    type: Number,
-    default: 50
-},
-
-
+    credits: {
+        type: Number,
+        default: 50
+    },
 });
+
 
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
@@ -105,12 +112,13 @@ const validateTailor = (tailor) => {
         lastname: Joi.string().min(3).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().min(6).required(),
-      address: Joi.string().required(),
-      description: Joi.string().required(),
+        address: Joi.string().required(),
+        description: Joi.string().required(),
     });
 
     return schema.validate(tailor);
 }
+
 export { User, validateUser, Tailor, validateTailor };
 
 
