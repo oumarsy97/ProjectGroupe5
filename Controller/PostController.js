@@ -1,52 +1,93 @@
-import { User,  Tailor,  } from "../Model/User.js";
+import { User,  Tailor } from "../Model/User.js";
 import { Post } from '../Model/Post.js';
-//import { Discussion } from '../Model/Discussion.js';
+import { Chat } from '../Model/Chat.js';
 
 export default class PostController {
     static create = async (req, res) => {
         const { title, description } = req.body;
-        const author = req.userId;
+        const idUser = req.userId;
         const files = req.files;
-    
-        if (!files || files.length === 0) {
-          return res.status(400).json({ message: 'No files uploaded', status: false });
+        const tailor = await Tailor.findOne({ idUser });
+        // console.log(tailor);  
+        //verifer si il au moins 10 credits 
+        if (tailor.credits < 10) {
+            return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
         }
     
         try {
-          // Obtenir les URLs Cloudinary des fichiers
-          const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
-    
-          const newPost = await Post.create({ title, description, content: contentUrls, author });
-          res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+          if (!files || files.length === 0) return res.status(400).json({ message: 'No files uploaded', status: false });
+            tailor.credits -= 10;
+            await tailor.save();
+            // Obtenir les URLs Cloudinary des fichiers
+            const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
+
+            const newPost = await Post.create({ title, description, content: contentUrls, author });
+            res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
+
         } catch (error) {
-          res.status(400).json({ message: error.message, data: null, status: false });
+            res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
+    }
 
     static share = async (req, res) => {
-        const { postId, recipientId } = req.body;
+        const { postId, recipientIds, message } = req.body;
         const initiatorId = req.userId;
 
-        try {
-            const user = await User.findById(initiatorId);
-            const post = await Post.findById(postId);
-            const recipient = await User.findById(recipientId);
+        // Limiter le nombre de destinataires à 5
+        if (recipientIds.length > 5) {
+            return res.status(400).json({ message: 'Vous ne pouvez pas partager un post avec plus de 5 destinataires.', status: false });
+        }
 
-            if (!user || !post || !recipient) {
-                return res.status(404).json({ message: 'Utilisateur ou post non trouvé', status: false });
+        try {
+            // Vérifier si le post existe
+            const post = await Post.findById(postId);
+            if (!post) {
+                return res.status(404).json({ message: 'Post non trouvé', status: false });
             }
 
-            const newDiscussion = await Discussion.create({
-                post: postId,
-                initiator: initiatorId,
-                recipient: recipientId
-            });
+            // Créer ou mettre à jour une discussion pour chaque destinataire
+            const chats = [];
+            for (const recipientId of recipientIds) {
+                // Vérifier si une discussion existe déjà entre les utilisateurs
+                let chat = await Chat.findOne({ initiator: initiatorId, recipient: recipientId });
 
-            return res.status(201).json({ message: 'Discussion créée avec succès', data: newDiscussion, status: true });
+                if (!chat) {
+                    // Créer une nouvelle discussion si elle n'existe pas
+                    chat = await Chat.create({
+                        initiator: initiatorId,
+                        recipient: recipientId,
+                        messages: message ? [{
+                            sender: initiatorId,
+                            content: message,
+                            timestamp: new Date(),
+                            seen: false
+                        }] : []
+                    });
+                } else if (message) {
+                    // Ajouter le message à une discussion existante
+                    chat.messages.push({
+                        sender: initiatorId,
+                        content: message,
+                        timestamp: new Date(),
+                        seen: false
+                    });
+                    await chat.save();
+                }
+
+                chats.push(chat);
+
+                // Mettre à jour le post pour ajouter les partages
+                await Post.updateOne(
+                    { _id: postId },
+                    { $addToSet: { 'shares': { user: initiatorId, recipient: recipientId } } }
+                );
+            }
+
+            return res.status(200).json({ message: 'Post partagé avec succès', data: chats, status: true });
         } catch (error) {
             return res.status(400).json({ message: error.message, data: null, status: false });
         }
-    }
+    };
 
     static report = async (req, res) => {
         const { postId } = req.params;
@@ -196,10 +237,24 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-    // static dislikePost = async (req, res) => {
-    //     try {
-    //         const dislikerId = req.userId; 
-    //         const dislikedId = req.params.id; 
+    //unlike post
+    static unlikePost = async (req, res) => {
+        try {
+            const user = await User.findById(req.userId);
+            const post = await Post.findById(req.params.id);
+            if (!post) {
+                return res.status(404).json({ message: "Post not found", data: null, status: false });
+            }
+            if (!post.dislikes.includes(user._id)) {
+                return res.status(400).json({ message: "You haven't like this post", data: null, status: false });
+            }
+            post.likes.pull(user._id);
+            await post.save();
+            res.status(200).json({ message: "Post unliked", data: post, status: true });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    };
 
     //         console.log("likerId:", dislikerId);
     //         console.log("likedId:", dislikedId);
@@ -349,8 +404,121 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: false });
         }
     }
-    
-    static voteTailleur = async (req, res) => {
 
+    //delete comment
+    static deleteComment = async (req, res) => {
+        try {
+            const { idComment, idPost } = req.params;
+            const idUser = req.userId;
+            const user = await User.findById(idUser);
+            if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+            // Trouver l'index du commentaire à supprimer
+            const commentIndex = post.comments.findIndex(comment => comment._id.toString() === idComment);
+            if (commentIndex === -1) {
+                return { message: "Comment not found", data: null, status: 404 };
+            }
+            // Supprimer le commentaire du tableau
+            post.comments.splice(commentIndex, 1);
+            // Enregistrer les modifications
+            await post.save();
+            res.status(200).json({ message: "Post deleted from comment successfully", data: post, status: 200 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    }
+
+    static replyToComment = async (req, res) => {
+        try {
+            const { idPost, idComment } = req.params;
+            const userId = req.userId;
+            const { text } = req.body; // Retiré media
+
+            // Trouver l'utilisateur
+            const user = await User.findById(userId);
+            if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+            // Trouver le post
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+            // Trouver le commentaire
+            const comment = post.comments.id(idComment);
+            if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
+
+            // Assurez-vous que response est initialisé comme un tableau
+            if (!comment.response) {
+                comment.response = [];
+            }
+            // Créer la nouvelle réponse
+            const newReply = {
+                user: user._id,
+                text
+            };
+            // Ajouter la réponse au tableau
+            comment.response.push(newReply);
+            await post.save();
+
+            res.status(200).json({ message: "Reply added successfully", data: post, status: 200 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    };
+
+    static deleteReply = async (req, res) => {
+        try {
+            const { idPost, idComment, idReply } = req.params;
+            const userId = req.userId;
+            // Trouver l'utilisateur
+            const user = await User.findById(userId);
+            if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+            // Trouver le post
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+            // Trouver le commentaire
+            const comment = post.comments.id(idComment);
+            if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
+            // Trouver l'index de la réponse à supprimer
+            const replyIndex = comment.response.findIndex(reply => reply._id.toString() === idReply);
+            if (replyIndex === -1) return res.status(404).json({ message: "Reply not found", data: null, status: 404 });
+            // Supprimer la réponse
+            comment.response.splice(replyIndex, 1);
+            await post.save();
+    
+            res.status(200).json({ message: "Reply deleted successfully", data: post, status: 200 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    };    
+
+    static viewPost = async (req, res) => {
+        try {
+            const { postId } = req.params;
+            const userId = req.userId;
+
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found", status: false });
+            }
+            // Vérifier si l'utilisateur est un tailleur
+            const isTailor = await Tailor.findOne({ idUser: userId });
+            if (isTailor) {
+                return res.status(403).json({ message: "Tailors cannot view their own posts", status: false });
+            }
+            const post = await Post.findById(postId);
+            if (!post) {
+                return res.status(404).json({ message: "Post not found", status: false });
+            }
+            // Vérifier si l'auteur du post est le même que l'utilisateur actuel
+            if (post.author.toString() === userId) {
+                return res.status(403).json({ message: "You cannot view your own post", status: false });
+            }
+            post.views += 1;
+            await post.save();
+
+            res.status(200).json({ message: "Post viewed", data: post, status: true });
+        } catch (error) {
+            console.error("Error in viewPost:", error);
+            res.status(500).json({ message: "An error occurred while viewing the post", error: error.message });
+        }
     }
 }

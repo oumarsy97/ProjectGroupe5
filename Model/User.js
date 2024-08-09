@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import Joi from "joi";
 
 const userSchema = new Schema({
-    firstname: {
+    firtsname: {
         type: String,
         required: true,
     },
@@ -24,7 +24,10 @@ const userSchema = new Schema({
         default: "man",
     },
     photo: String,
-    phone: String,
+    phone: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         enum: ["tailor", "user"],
@@ -64,7 +67,6 @@ const validateUser = (user) => {
 };
 
 
-
 //Tailor
 const TailorSchema = new Schema({
     idUser: {
@@ -80,6 +82,14 @@ const TailorSchema = new Schema({
         type: String,
         required: true
     },
+    averageRating: {
+        type: Number,
+        default: 0,
+    },
+    totalRatings: {
+        type: Number,
+        default: 0,
+    },
     follows: [
         {
             type: Schema.Types.ObjectId,
@@ -88,9 +98,19 @@ const TailorSchema = new Schema({
     votes : {
         type: Number,
         required: true,
-    }
+    },
 
+    created: {
+        type: Date,
+        default: Date.now
+    },
+
+    credits: {
+        type: Number,
+        default: 50
+    },
 });
+
 
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {

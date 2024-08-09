@@ -3,6 +3,7 @@ import express from "express";
 import Middleware from "../middlewares/Middleware.js";
 
 const router = express.Router();
+
 router.post("/register", UserController.addUser);
 router.post("/login", UserController.login);
 router.get("/", UserController.listUser); 
@@ -11,4 +12,7 @@ router.get("/gettailor",Middleware.auth, UserController.listTailor);
 router.get("/addfavoris/:idPost",Middleware.auth, UserController.addFavoris); 
 router.delete("/deletefavoris/:idPost",Middleware.auth, UserController.deleteFavoris);
 router.get('/search', Middleware.auth, UserController.search);
+router.post("/addcredits",Middleware.auth,Middleware.isanTailor, UserController.addCredit);
+router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.achatCode);
+
 export default router;

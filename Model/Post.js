@@ -1,5 +1,6 @@
 import joi from "joi";
 import { Schema, model } from "mongoose";
+
 const commentSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
@@ -13,7 +14,22 @@ const commentSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    response: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 });
 
 const notesSchema = new Schema({
@@ -75,17 +91,41 @@ const postSchema = new Schema({
             ref: 'Tailor',
         }],
     },
-
     repost: [{
         type: Schema.Types.ObjectId,
         ref: 'Tailor',
     }],
-    shares: {
-        type: [{
+    shares: [{
+        user: {
             type: Schema.Types.ObjectId,
             ref: 'User',
-        }],
-    }
+            required: true
+        },
+        recipient: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    reports: [{
+        reportedBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        reason: {
+            type: String,
+            required: true,
+        },
+        reportedAt: {
+            type: Date,
+            default: Date.now,
+        }
+    }]
 });
 
 const Post = model("Post", postSchema);

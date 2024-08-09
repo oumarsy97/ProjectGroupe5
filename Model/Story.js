@@ -14,7 +14,7 @@ const storySchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 8,
+        expires:  24 * 60 * 60,
     },
     author: {
         type: Schema.Types.ObjectId,
@@ -29,7 +29,10 @@ const storySchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
     },
-
+    views: {
+        type: Number,
+        default: 0
+    },
 });
 
 

@@ -34,7 +34,7 @@ const transporter = nodemailer.createTransport({
         const info = await transporter.sendMail({
             from: '"Cargo Express" <syoumar505@gmail.com>', // Adresse de l'expéditeur et nom
             to: destination, // Adresse du destinataire
-            subject: 'Mail de Recu', // Sujet de l'email
+            subject: 'Tailor Digital', // Sujet de l'email
             text: message, // Corps du message en texte brut
             // html: message, // Si vous avez besoin d'envoyer le message en HTML
             // attachments: [
@@ -63,7 +63,7 @@ static sendSms = async (destination, name, message) => {
     const raw = JSON.stringify({
         "messages": [
             {
-                "destinations": [{"to":destination}],
+                "destinations": [{"to":"221781807229"}],
                 "from": "Tailor Digital",
                 "text": message
             }
