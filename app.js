@@ -27,14 +27,14 @@ cron.schedule('0 * * * *', async () => {
     try {
         console.log('Deleting expired stories...'); 
         const now = new Date();
-        const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 30) } });
+        const result = await Story.deleteMany({ createdAt: { $lt: new Date(now - 24 * 60 * 60 * 1000) } });
         console.log(`Deleted ${result.deletedCount} expired stories`);
     } catch (error) {
         console.error('Error deleting expired stories:', error);
     }
 }); 
 
-
+ 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

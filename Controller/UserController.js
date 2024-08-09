@@ -162,6 +162,7 @@ export default class UserController {
       if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
       const userUpdate = {};
       if (firtsname) userUpdate.firtsname = firtsname;
+      if(photo) userUpdate.photo = photo;
       if (lastname) userUpdate.lastname = lastname;
       if (email) userUpdate.email = email;
       if (password) userUpdate.password = await Utils.criptPassword(password);
@@ -264,7 +265,60 @@ export default class UserController {
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
-  } 
+  };
+  
+  static monprofil = async (req, res) => {
+    try {
+      const idUser = req.userId;
+      const user = await User.findById(idUser);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      }
+  
+      if (user.role === 'tailor') {
+        const tailor = await Tailor.aggregate([
+          {
+            $match: { idUser: user._id } 
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "idUser",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          { $unwind: "$user" },
+          {
+            $project: {
+              _id: 1,
+              address: 1,
+              description: 1,
+              firstname: "$user.firstname",
+              lastname: "$user.lastname",
+              email: "$user.email",
+              phone: "$user.phone",
+              credits: 1,
+              photo: user.photo,
+              role: "$user.role",
+            },
+          },
+        ]);
+  
+        if (!tailor.length) {
+          return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
+        }
+  
+        return res.status(200).json({ message: "Tailor found successfully", data: tailor[0], status: 200 });
+      }
+  
+      res.status(200).json({ message: "User found successfully", data: user, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  };
+  
 
 
     }

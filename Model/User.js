@@ -105,10 +105,11 @@ credits: {
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-         firtsname: Joi.string().min(3).max(30).required(),
+        firtsname: Joi.string().min(3).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
         email: Joi.string().email().required(),
+        photo: Joi.string(),
         password: Joi.string().min(6).required(),
       address: Joi.string().required(),
       description: Joi.string().required(),
