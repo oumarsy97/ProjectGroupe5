@@ -11,7 +11,7 @@ export default class PostController {
         // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
-          return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
+            return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
         }
 
 
@@ -20,8 +20,8 @@ export default class PostController {
         }
 
         try {
-          tailor.credits -= 10;
-          await tailor.save();
+            tailor.credits -= 10;
+            await tailor.save();
             // Obtenir les URLs Cloudinary des fichiers
             const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
 
@@ -302,6 +302,76 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
+
+    static replyToComment = async (req, res) => {
+        try {
+            const { idPost, idComment } = req.params;
+            const userId = req.userId;
+            const { text } = req.body; // Retiré media
+
+            // Trouver l'utilisateur
+            const user = await User.findById(userId);
+            if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+
+            // Trouver le post
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+
+            // Trouver le commentaire
+            const comment = post.comments.id(idComment);
+            if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
+
+            // Assurez-vous que response est initialisé comme un tableau
+            if (!comment.response) {
+                comment.response = [];
+            }
+
+            // Créer la nouvelle réponse
+            const newReply = {
+                user: user._id,
+                text
+            };
+
+            // Ajouter la réponse au tableau
+            comment.response.push(newReply);
+            await post.save();
+
+            res.status(200).json({ message: "Reply added successfully", data: post, status: 200 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    };
+
+    static deleteReply = async (req, res) => {
+        try {
+            const { idPost, idComment, idReply } = req.params;
+            const userId = req.userId;
+    
+            // Trouver l'utilisateur
+            const user = await User.findById(userId);
+            if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+    
+            // Trouver le post
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+    
+            // Trouver le commentaire
+            const comment = post.comments.id(idComment);
+            if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
+    
+            // Trouver l'index de la réponse à supprimer
+            const replyIndex = comment.response.findIndex(reply => reply._id.toString() === idReply);
+            if (replyIndex === -1) return res.status(404).json({ message: "Reply not found", data: null, status: 404 });
+    
+            // Supprimer la réponse
+            comment.response.splice(replyIndex, 1);
+            await post.save();
+    
+            res.status(200).json({ message: "Reply deleted successfully", data: post, status: 200 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
+    };    
 
     static viewPost = async (req, res) => {
         try {

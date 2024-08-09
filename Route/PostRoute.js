@@ -11,6 +11,8 @@ PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload.array('
 PostRoute.get('/getAllPosts',Middleware.auth,Middleware.isanTailor, PostController.getAllPosts);
 PostRoute.get('/comment/:idPost', Middleware.auth, PostController.comment);
 PostRoute.delete('/comment/:idPost/:idComment', Middleware.auth, PostController.deleteComment);
+PostRoute.post('/comment/:idPost/:idComment/reponse', Middleware.auth, PostController.replyToComment);
+PostRoute.delete('/comment/:idPost/:idComment/reponse/:idReply', Middleware.auth, PostController.deleteReply);
 PostRoute.get('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostController.repost);
 PostRoute.delete('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostController.deleteRepost);
 PostRoute.post('/report/:postId',Middleware.auth, Middleware.isanTailor, PostController.report);

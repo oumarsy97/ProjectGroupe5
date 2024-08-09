@@ -1,5 +1,6 @@
 import joi from "joi";
 import { Schema, model } from "mongoose";
+
 const commentSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,
@@ -13,8 +14,24 @@ const commentSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    response: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 });
+
 const postSchema = new Schema({
     title: {
         type: String,
