@@ -43,6 +43,7 @@ const notesSchema = new Schema({
         required: true
     }
 });
+
 const postSchema = new Schema({
     title: {
         type: String,

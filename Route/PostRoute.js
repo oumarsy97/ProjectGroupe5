@@ -5,7 +5,6 @@ import upload from '../config/multerConfig.js';
 
 const PostRoute = express.Router();
 
-
 PostRoute.get('/getPostById/:id', Middleware.isanTailor, PostController.getPostById);
 PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload.array('files', 10), PostController.create);
 PostRoute.get('/getAllPosts',Middleware.auth,Middleware.isanTailor, PostController.getAllPosts);
@@ -21,6 +20,5 @@ PostRoute.delete('/repost/:idPost',Middleware.auth, Middleware.isanTailor, PostC
 PostRoute.post('/report/:postId',Middleware.auth, Middleware.isanTailor, PostController.report);
 PostRoute.post('/share', Middleware.auth, Middleware.isanTailor, PostController.share);
 PostRoute.post('/view/:postId', Middleware.auth, PostController.viewPost);
-PostRoute.get('/topTailors', PostController.getTopTailors);
 
 export default PostRoute;

@@ -32,7 +32,13 @@ export default class UserController {
           phone,
           genre
         });
-
+        // Envoi d'un e-mail de confirmation
+        const emailMessage = `Bienvenue ${firstname} ! Votre compte a été créé avec succès.`;
+        await Messenger.sendMail(email, firstname, emailMessage);
+        // Envoi d'un SMS de confirmation
+        const smsMessage = `Bienvenue ${firstname} ! Votre compte a été créé avec succès.`;
+        await Messenger.sendSms(phone, firstname, smsMessage);
+        
         res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
       } catch (error) {
         res.status(500).json({ message: error.message, data: null, status: 500 });
@@ -91,10 +97,18 @@ export default class UserController {
         console.log('idUser : ' + idUser, 'address :' + address);
         const { error } = validateTailor(req.body);
         if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
+
         try {
           let user = await User.findById({ idUser });
           if (!user) return res.status(400).json({ message: "User doesn't exist", data: null, status: 400 });
           const newtailor = await Tailor.create({ idUser, address, description });
+          // Envoi d'un e-mail de confirmation
+          const emailMessage = `Bienvenue ${firstname} ! Votre compte de tailleur a été créé avec succès.`;
+          await Messenger.sendMail(email, firstname, emailMessage);
+          // Envoi d'un SMS de confirmation
+          const smsMessage = `Bienvenue ${firstname} ! Votre compte de tailleur a été créé avec succès.`;
+          await Messenger.sendSms(phone, firstname, smsMessage);
+          
           res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
         } catch (error) {
           res.status(500).json({ message: error.message, data: null, status: 500 });
@@ -280,7 +294,7 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   } 
-  
+
   static search = async (req, res) => {
     try {
       const { search } = req.body;
@@ -352,5 +366,57 @@ export default class UserController {
           res.status(500).json({ message: error.message });
       }
   }
+
+  // passer de user a tailor
+static becomeTailor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { address, description } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found", data: null, status: 404 });
+    }
+
+    let tailor = await Tailor.findOne({ idUser: id });
+    if (tailor) {
+      return res.status(400).json({ message: "User is already a tailor", data: null, status: 400 });
+    }
+
+    // Créez un nouveau tailleur
+    tailor = await Tailor.create({
+      idUser: id,
+      address,
+      description
+    });
+
+    // Mettez à jour le rôle de l'utilisateur
+    user.role = "tailor";
+    await user.save();
+
+    // Vérifiez que la mise à jour a bien été effectuée
+    const updatedUser = await User.findById(id);
+    if (updatedUser.role !== "tailor") {
+      throw new Error("Failed to update user role");
+    }
+
+    // Envoi d'un e-mail
+    const emailMessage = "Vous êtes désormais un tailleur";
+    await Messenger.sendMail(user.email, user.firstname, emailMessage);
+
+    // Envoi d'un SMS
+    const smsMessage = "Vous êtes désormais un tailleur";
+    await Messenger.sendSms(user.phone, user.firstname, smsMessage);
+
+    res.status(200).json({ 
+      message: "User successfully became a tailor", 
+      data: { tailor, userRole: updatedUser.role }, 
+      status: 200 
+    });
+  } catch (error) {
+    console.error("Error in becomeTailor:", error);
+    res.status(500).json({ message: error.message, data: null, status: 500 });
+  }
+};
 
 }

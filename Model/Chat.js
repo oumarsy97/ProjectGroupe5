@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const chatSchema = new mongoose.Schema({
+
     initiator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -18,7 +19,7 @@ const chatSchema = new mongoose.Schema({
                 ref: 'User',
                 required: true
             },
-            content: {
+            text: {
                 type: String,
                 required: true
             },
@@ -29,7 +30,11 @@ const chatSchema = new mongoose.Schema({
             seen: {
                 type: Boolean,
                 default: false
-            }
+            },
+            content: [{
+                type: String,
+                required: true,
+            }],
         }
     ]
 }, { timestamps: true });

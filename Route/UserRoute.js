@@ -14,5 +14,7 @@ router.delete("/deletefavoris/:idPost",Middleware.auth, UserController.deleteFav
 router.get('/search', Middleware.auth, UserController.search);
 router.post("/addcredits",Middleware.auth,Middleware.isanTailor, UserController.addCredit);
 router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.achatCode);
+router.put("/becomeTailor/:id", Middleware.auth, UserController.becomeTailor);
+
 
 export default router;
