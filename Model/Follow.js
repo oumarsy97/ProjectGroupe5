@@ -5,12 +5,10 @@ const followSchema = new Schema({
   followerId: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    required: true,
   },
   followedId: {
     type: Schema.Types.ObjectId,
-    ref: "Tailor",
-    required: true,
+    ref: "User",
   }
 });
 
@@ -22,6 +20,5 @@ const validateFollow = (follow) => {
 
   return schema.validate(follow);
 };
-
 
 export { Follow, validateFollow };

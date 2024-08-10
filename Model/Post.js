@@ -1,5 +1,6 @@
 import joi from "joi";
 import { Schema, model } from "mongoose";
+
 const commentSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
@@ -22,16 +23,48 @@ const commentSchema = new Schema({
         required: true,
       },
       text: {
-        type: String,
-        required: true,
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now,
-      },
+        ref: 'User',
+        required: true
     },
-  ],
+    text: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    response: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
+}  ],
 });
+
+const notesSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    note: {
+        type: Number,
+        required: true
+    }
+});
+
+
 const postSchema = new Schema({
   title: {
     type: String,
@@ -51,6 +84,12 @@ const postSchema = new Schema({
     text: {
       type: String,
       required: true,
+    },
+    notes: [notesSchema],
+    visibility: {
+        type: String,
+        enum: ["public", "friends"],
+        default: "public",
     },
   },
   createdAt: {
@@ -86,11 +125,7 @@ const postSchema = new Schema({
     type: Number,
     default: 0,
   },
-  visibility: {
-    type: String,
-    enum: ["public", "friends"],
-    default: "public",
-  },
+  
   mentions: [
     {
       type: Schema.Types.ObjectId,
@@ -110,24 +145,7 @@ const postSchema = new Schema({
     },
   ],
 
-  shares: [
-    {
-      user: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      recipient: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-      },
-      sharedAt: {
-        type: Date,
-        default: Date.now,
-      },
-    },
-  ],
+ 
   reports: [
     {
       reportedBy: {
@@ -145,6 +163,24 @@ const postSchema = new Schema({
       },
     },
   ],
+    
+    shares: [{
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        recipient: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+   
 });
 
 const Post = model("Post", postSchema);

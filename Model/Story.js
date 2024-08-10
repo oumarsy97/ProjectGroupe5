@@ -33,7 +33,6 @@ const storySchema = new Schema({
         type: Number,
         default: 0
     },
-
 });
 
 

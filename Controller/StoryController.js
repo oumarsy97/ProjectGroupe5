@@ -26,6 +26,10 @@ export default class StoryController {
             const { idStory } = req.params;
             const iduser = req.userId;
             const story = await Story.findById(idStory);
+            if (!story) {
+                return res.status(404).json({ message: "Story not found", data: null, status: false });
+            }
+
             if (story.author != iduser) return res.status(400).json({ message: "you can't delete this story", data: null, status: false });
             const deleteStory = await Story.findByIdAndDelete(idStory);
             res.status(200).json({ message: "Story deleted successfully", data: deleteStory, status: true });
@@ -89,7 +93,7 @@ export default class StoryController {
         }
     };
 
-
+ 
     //mes stories
     static getMyStories = async (req, res) => {
         try {
@@ -140,4 +144,4 @@ export default class StoryController {
     };
     
 
-}
+} 

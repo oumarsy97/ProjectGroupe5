@@ -1,5 +1,6 @@
 import dns from 'dns';
 import { User, Tailor } from "../Model/User.js";
+import mongoose from "mongoose";
 dns.setServers(['8.8.8.8', '8.8.4.4']); // Use Google's DNS servers
 import { Follow, validateFollow } from "../Model/Follow.js";
 
@@ -10,6 +11,7 @@ export default class FollowController {
         try {
             const followedId = req.body.followedId;
             const followerId = req.userId;
+            console.log(req.body);
             if (followerId == followedId) return res.status(400).json({ error: "You cannot follow yourself" });
             let follower = await User.findById(followerId);
             // console.log(followedId);
@@ -48,6 +50,26 @@ export default class FollowController {
             }
             else  followerId = req.userId;
             const followers = await Follow.find({ followerId });
+    } catch (error) {
+        res.status(500).json({ message: error.message ,data: null, status: 500});
+    }
+}
+
+    static getFollowers = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+    
+        try {
+            let followedId;
+            followedId = req.params.id;
+            if (!followedId) {
+                followedId = req.userId;
+            }
+            const objectId = new mongoose.Types.ObjectId(followedId);
+            console.log("id"+objectId);
+            const followers = await Follow.find({ followedId: objectId });
+            console.log(followers);
+    
             res.status(200).json(followers);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -63,6 +85,50 @@ export default class FollowController {
             }
             else  followedId = req.userId;
             const following = await Follow.find({ followedId});
+        } catch (error) {
+            res.status(500).json({ message: error.message ,data: null, status: 500});
+        }
+    }  
+
+    static getFollowing = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+    
+        try {
+            let followerId;
+            followerId = req.params.id;
+            if (!followerId) {
+                followerId = req.userId;
+            }
+            const objectId = new mongoose.Types.ObjectId(followerId);
+            console.log("id"+objectId);
+            const followers = await Follow.find({ followerId: objectId });
+            console.log(followers);
+    
+            res.status(200).json(followers);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getMyFollowers = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followerId = req.userId;
+            const followers = await Follow.find({ followedId: followerId });
+            res.status(200).json(followers);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    static getMyFollowing = async (req, res) => {
+        const { error } = validateFollow(req.body);
+        if (error) return res.status(400).json({ error: error.details[0].message });
+        try {
+            const followedId = req.userId;
+            const following = await Follow.find({ followerId: followedId });
             res.status(200).json(following);
         } catch (error) {
             res.status(500).json({ error: error.message });

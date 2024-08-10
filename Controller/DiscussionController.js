@@ -1,4 +1,4 @@
-// Controller/DiscussionController.js
+// controllers/DiscussionController.js
 import {Discussion} from '../Model/Discussion.js';
 import {Post} from '../Model/Post.js';
 import {User} from '../Model/User.js';
