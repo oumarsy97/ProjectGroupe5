@@ -1,11 +1,8 @@
 import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
-import bcrypt from "bcryptjs";
-import jwt from 'jsonwebtoken';
+import upload from '../config/multerConfig.js'; // Import de la configuration multer
 import Utils from "../utils/utils.js";
-import { Post } from "../Model/Post.js";
 import GenerateCode from "../Model/GenerateCode.js";
 import Messenger from "../utils/Messenger.js";
-import upload from '../config/multerConfig.js'; // Import de la configuration multer
 
 export default class UserController {
   static addUser = async (req, res) => {
@@ -19,7 +16,6 @@ export default class UserController {
       if (error) {
         return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
       }
-
       try {
         let user = await User.findOne({ email });
         if (user) {
@@ -78,6 +74,8 @@ export default class UserController {
   //Tailor
 
       static addTailor = async (req, res) => {
+        const { idUser, address, description } = req.body;
+        console.log('idUser : ' + idUser, 'address :' + address);
         const { error } = validateTailor(req.body);
         if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
          try {  
@@ -100,7 +98,7 @@ export default class UserController {
           res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
         } catch (error) {
           res.status(500).json({ message: error.message, data: null, status: 500 });
-        } 
+        }
         };
 
   //lister Users
@@ -128,10 +126,13 @@ export default class UserController {
         { $unwind: "$user" },
         {
           $project: {
-            _id: 1, address: 1, description: 1, 'firstname': '$user.firstname',
-            'lastname': '$user.lastname',
-            'email': '$user.email',
-            'role': '$user.role'
+            _id: 1,
+            address: 1,
+            description: 1,
+            firstname: "$user.firstname",
+            lastname: "$user.lastname",
+            email: "$user.email",
+            role: "$user.role"
           }
         },
       ]);
@@ -191,8 +192,15 @@ export default class UserController {
     try {
       const tailor = await Tailor.findById(id);
       if (!tailor) return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
-
-      const user = await User.findByIdAndUpdate(tailor.idUser, { firstname, lastname, phone, email }, { new: true });
+      const userUpdate = {};
+      if (firtsname) userUpdate.firtsname = firtsname;
+      if(photo) userUpdate.photo = photo;
+      if (lastname) userUpdate.lastname = lastname;
+      if (email) userUpdate.email = email;
+      if (password) userUpdate.password = await Utils.criptPassword(password);
+      if (address) userUpdate.address = address;
+      if (description) userUpdate.description = description;
+      const user = await User.findByIdAndUpdate(id, userUpdate);
       if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
 
       tailor.address = address;
@@ -250,7 +258,6 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
-
   static addCredit = async (req, res) => {
     try {
       const idUser = req.userId;
@@ -294,58 +301,158 @@ export default class UserController {
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
-  } 
-
-  // passer de user a tailor
-static becomeTailor = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { address, description } = req.body;
-
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found", data: null, status: 404 });
+  };
+  
+  static monprofil = async (req, res) => {
+    try {
+      const idUser = req.userId;
+      const user = await User.findById(idUser);
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      }
+  
+      if (user.role === 'tailor') {
+        const tailor = await Tailor.aggregate([
+          {
+            $match: { idUser: user._id } 
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "idUser",
+              foreignField: "_id",
+              as: "user",
+            },
+          },
+          { $unwind: "$user" },
+          {
+            $project: {
+              _id: 1,
+              address: 1,
+              description: 1,
+              firstname: "$user.firstname",
+              lastname: "$user.lastname",
+              email: "$user.email",
+              phone: "$user.phone",
+              credits: 1,
+              photo: user.photo,
+              role: "$user.role",
+            },
+          },
+        ]);
+  
+        if (!tailor.length) {
+          return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
+        }
+  
+        return res.status(200).json({ message: "Tailor found successfully", data: tailor[0], status: 200 });
+      }
+  
+      res.status(200).json({ message: "User found successfully", data: user, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
     }
+  };
+  
 
-    let tailor = await Tailor.findOne({ idUser: id });
-    if (tailor) {
-      return res.status(400).json({ message: "User is already a tailor", data: null, status: 400 });
+  static search = async (req, res) => {
+    try {
+      const { search } = req.body;
+      if (!search) {
+        const formattedTailors = await this.getTopTailors(req, res);
+        return res.status(200).json({ message: "There are the top 10 tailors", data: formattedTailors, status: 200 });
+      }
+      const tailors = await Tailor.aggregate([
+        {
+            $lookup: {
+                from: "users",
+                localField: "idUser",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        { $unwind: "$user" },
+        {
+            $match: {
+                $and: [ // Utilisation de $and pour combiner les conditions
+                    {
+                        $or: [
+                            { 'user.firstname': { $regex: search, $options: 'i' } },
+                            { 'user.lastname': { $regex: search, $options: 'i' } }
+                        ]
+                    },
+                    { 'user.role': 'tailor' }
+                ]
+            }
+        },
+        {
+            $project: {
+                _id: 1,
+                address: 1,
+                description: 1,
+                firstname: "$user.firstname",
+                lastname: "$user.lastname",
+                email: "$user.email",
+                role: "$user.role"
+            }
+        },
+    ]);
+
+      res.status(200).json({ message: "Tailors retrieved successfully", data: tailors, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
     }
-
-    // Créez un nouveau tailleur
-    tailor = await Tailor.create({
-      idUser: id,
-      address,
-      description
-    });
-
-    // Mettez à jour le rôle de l'utilisateur
-    user.role = "tailor";
-    await user.save();
-
-    // Vérifiez que la mise à jour a bien été effectuée
-    const updatedUser = await User.findById(id);
-    if (updatedUser.role !== "tailor") {
-      throw new Error("Failed to update user role");
-    }
-
-    // Envoi d'un e-mail
-    const emailMessage = "Vous êtes désormais un tailleur";
-    await Messenger.sendMail(user.email, user.firstname, emailMessage);
-
-    // Envoi d'un SMS
-    const smsMessage = "Vous êtes désormais un tailleur";
-    await Messenger.sendSms(user.phone, user.firstname, smsMessage);
-
-    res.status(200).json({ 
-      message: "User successfully became a tailor", 
-      data: { tailor, userRole: updatedUser.role }, 
-      status: 200 
-    });
-  } catch (error) {
-    console.error("Error in becomeTailor:", error);
-    res.status(500).json({ message: error.message, data: null, status: 500 });
   }
-};
+
+  static getTopTailors = async (req, res) => {
+      try {
+          const topTailors = await Tailor.find()
+              .sort({ votes: -1 })
+              .limit(10)
+              .populate('idUser', 'firstname lastname') // Assurez-vous que ces champs existent
+              .select('votes');
+          const formattedTailors = topTailors.map(tailor => ({
+              tailorname: `${tailor.idUser?.firstname || 'Unknown'} ${tailor.idUser?.lastname || 'Unknown'}`, // Utilisation de l'opérateur de coalescence
+              votes: tailor.votes
+          }));
+          console.log(formattedTailors);
+          res.status(200).json({
+              message: "Top tailors retrieved",
+              data: formattedTailors,
+              status: true
+          });
+          return formattedTailors;
+      } catch (error) {
+          res.status(500).json({ message: error.message });
+      }
+  }
+
+static becometailor = async (req, res) => {
+    try {
+        const idUser = req.userId;
+        console.log(idUser);
+        const { description, address } = req.body;
+        const user = await User.findById(idUser);
+        if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+       if(user.role === "tailor") return res.status(400).json({ message: "User already tailor", data: null, status: 400 });
+       const  tailor = await Tailor.findOne({ idUser });
+       if(tailor) return res.status(400).json({ message: "User already tailor", data: null, status: 400 });
+       const newTailor = new Tailor({
+         idUser:user.id,
+         description,
+         address
+        });
+        user.role = "tailor";
+        await newTailor.save();
+        await user.save();
+        Messenger.sendMail(user.email, user.firtsname, "Feel free to become tailor. You become tailor,you have 5 free post");
+        Messenger.sendSms(user.phone,user.firtsname, `Feel free to become tailor. You become tailor,you have 5 free post`);
+        res.status(200).json({ message: "User become tailor successfully", data: newTailor, status: 200 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+        
 
 }

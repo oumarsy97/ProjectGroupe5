@@ -51,7 +51,7 @@ const User = model("User", userSchema);
 
 const validateUser = (user) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
+        firtsname: Joi.string().min(2).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         email: Joi.string().email().required(),
         password: Joi.string().trim().min(6).required().messages({
@@ -68,28 +68,36 @@ const validateUser = (user) => {
 };
 
 
-
-
 //Tailor
-const tailorSchema = new Schema({
-    idUser: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true
-    },
+const TailorSchema = new Schema({
+    
     address: {
         type: String,
         required: true
     },
     description: {
         type: String,
-        required: true 
+        required: true
+    },
+    averageRating: {
+        type: Number,
+        default: 0,
+    },
+    totalRatings: {
+        type: Number,
+        default: 0,
     },
     follows: [
         {
             type: Schema.Types.ObjectId,
             ref: "User"
         }],
+    votes : {
+        type: Number,
+        required: true,
+        default: 0
+    },
+
     created: {
         type: Date,
         default: Date.now
@@ -106,20 +114,21 @@ freePostsUsed: {
 
 });
 
-const Tailor = model("Tailor", tailorSchema);
 
+const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        firtsname: Joi.string().min(3).max(30).required(),
-        lastname: Joi.string().min(2).max(30).required(),
-        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')).required(),
+        // lastname: Joi.string().min(2).max(30).required(),
+        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
         email: Joi.string().email().required(),
+        photo: Joi.string(),
         password: Joi.string().min(6).required(),
         address: Joi.string().required(),
+        idUser: Joi.required(),
         description: Joi.string().required(),
     });
 
     return schema.validate(tailor);
-};
+}
 
 export { User, validateUser, Tailor, validateTailor };
