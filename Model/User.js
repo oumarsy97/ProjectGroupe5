@@ -94,17 +94,23 @@ const tailorSchema = new Schema({
         type: Date,
         default: Date.now
     },
-    credits: {
-        type: Number,
-        default: 50
-    },
+
+credits: {
+    type: Number,
+    default: 50
+},
+freePostsUsed: {
+    type: Number,
+    default: 0
+}
+
 });
 
 const Tailor = model("Tailor", tailorSchema);
 
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        firstname: Joi.string().min(3).max(30).required(),
+        firtsname: Joi.string().min(3).max(30).required(),
         lastname: Joi.string().min(2).max(30).required(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')).required(),
         email: Joi.string().email().required(),

@@ -8,51 +8,53 @@ import Messenger from "../utils/Messenger.js";
 import upload from '../config/multerConfig.js'; // Import de la configuration multer
 
 export default class UserController {
- 
-static addUser = async (req, res) => {
-  upload.single('photo')(req, res, async function (err) {
-    if (err) {
-      return res.status(400).json({ message: err.message, data: null, status: 400 });
-    }
-    const { firstname, lastname, email, password, role, phone, genre } = req.body;
-    const { error } = validateUser(req.body);
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-    }
-    try {
-      let user = await User.findOne({ email });
-      if (user) {
-        return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+  static addUser = async (req, res) => {
+    upload(req, res, async function (err) {
+      if (err) {
+        return res.status(400).json({ message: err.message, data: null, status: 400 });
       }
-      const newUser = await User.create({
-        firstname,
-        lastname,
-        email,
-        password: await Utils.criptPassword(password),
-        role,
-        photo: req.file?.path,
-        phone,
-        genre
-      });
 
-      // Envoi d'un e-mail de confirmation
-      const emailMessage = `Bienvenue ${firstname} ! Votre compte a été créé avec succès.`;
-      await Messenger.sendMail(email, firstname, emailMessage);
+      const { firtsname, lastname, email, password, role, phone, genre } = req.body;
+      const { error } = validateUser(req.body);
+      if (error) {
+        return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
+      }
+
+      try {
+        let user = await User.findOne({ email });
+        if (user) {
+          return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        }
+
+        const newUser = await User.create({
+          firtsname,
+          lastname,
+          email,
+          password: await Utils.criptPassword(password),
+          role,
+          photos: req.files.map(file => file.path), // Handling multiple files
+          phone,
+          genre
+        });
+
+        // Envoi d'un e-mail de confirmation
+      const emailMessage = `Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
+      await Messenger.sendMail(email, firtsname, emailMessage);
 
       // Envoi d'un SMS de confirmation
-      const smsMessage = `Bienvenue ${firstname} ! Votre compte a été créé avec succès.`;
-      await Messenger.sendSms(phone, firstname, smsMessage);
+      const smsMessage =` Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
+      await Messenger.sendSms(phone, firtsname, smsMessage);
 
-      res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  });
-};
-  
+        res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
+      } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+      }
+    });
+  };
   
 
   static login = async (req, res) => {
+    // const { email, password } = req.body;
     try {
       const { email, password } = req.body;
       const user = await User.findOne({ email });
@@ -60,48 +62,46 @@ static addUser = async (req, res) => {
         return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
       }
       const isMatch = await Utils.comparePassword(password, user.password);
+
       if (!isMatch) {
         return res.status(401).json({ message: 'Email ou mot de passe incorrect', data: null, status: false });
-      } 
+      }
       const token = Utils.generateToken(user);
+      console.log(token);
       res.status(200).json({ message: "User logged in successfully", data: token, status: 200 });
     } catch (error) {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
+
   };
 
   //Tailor
 
-  static addTailor = async (req, res) => {
-    const { error } = validateTailor(req.body);
-    if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
-    try {
-      const { firstname, lastname, email, phone, password, address, description } = req.body;
-      let user = await User.findOne({ email });
-      if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
-      const newUser = await User.create({
-        firstname,
-        lastname,
-        email,
-        phone,
-        password: await Utils.criptPassword(password),
-        role: "tailor"
-      });
-      const newTailor = await Tailor.create({ idUser: newUser._id, address, description });
+      static addTailor = async (req, res) => {
+        const { error } = validateTailor(req.body);
+        if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+         try {  
+          //creer dabord le user puis le tailor
+          const {firtsname, lastname, email,phone, password, address, description } = req.body;
+        //   console.log(firtsname, lastname, email, password, address, description );
+          let user  = await User.findOne({ email });
+          if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
+          const newuser =await  User.create({ firtsname, lastname, email, phone, password:await Utils.criptPassword(password), role:"tailor" });
+        //   console.log(newuser);
+          const newtailor = await Tailor.create({ idUser:newuser._id, address, description });
+          // Envoi d'un e-mail de confirmation
+          // Envoi d'un e-mail de confirmation
+          const emailMessage = `Bienvenue ${firtsname} ! Votre compte de tailleur a été créé avec succès.`;
+          await Messenger.sendMail(email, firtsname, emailMessage);
   
-      // Envoi d'un e-mail de confirmation
-      const emailMessage = `Bienvenue ${firstname} ! Votre compte de tailleur a été créé avec succès.`;
-      await Messenger.sendMail(email, firstname, emailMessage);
-  
-      // Envoi d'un SMS de confirmation
-      const smsMessage = `Bienvenue ${firstname} ! Votre compte de tailleur a été créé avec succès.`;
-      await Messenger.sendSms(phone, firstname, smsMessage);
-  
-      res.status(201).json({ message: "Tailor created successfully", data: newTailor, status: 201 });
-    } catch (error) {
-      res.status(500).json({ message: error.message, data: null, status: 500 });
-    }
-  };
+          // Envoi d'un SMS de confirmation
+          const smsMessage = `Bienvenue ${firtsname} ! Votre compte de tailleur a été créé avec succès.`;
+          await Messenger.sendSms(phone, firtsname, smsMessage);
+          res.status(201).json({ message: "Tailor created successfully", data: newtailor, status: 201 });
+        } catch (error) {
+          res.status(500).json({ message: error.message, data: null, status: 500 });
+        } 
+        };
 
   //lister Users
   static listUser = async (req, res) => {
@@ -153,6 +153,22 @@ static addUser = async (req, res) => {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   };
+  // Edit User profile
+  static editUser = async (req, res) => {
+    const { error } = validateUser(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
+    try {
+      const { id } = req.params;
+      const user = await User.findByIdAndUpdate(id, req.body, { new: true });
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      res.status(200).json({ message: "User updated successfully", data: user, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  };
+
+  //
+
 
   static deleteUser = async (req, res) => {
     try {
@@ -280,8 +296,7 @@ static addUser = async (req, res) => {
     }
   } 
 
-
-// passer de user a tailor
+  // passer de user a tailor
 static becomeTailor = async (req, res) => {
   try {
     const { id } = req.params;
@@ -332,6 +347,5 @@ static becomeTailor = async (req, res) => {
     res.status(500).json({ message: error.message, data: null, status: 500 });
   }
 };
-
 
 }

@@ -14,8 +14,7 @@ router.post("/addcredits",Middleware.auth,Middleware.isanTailor, UserController.
 router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.achatCode);
 router.put("/becomeTailor/:id", Middleware.auth, UserController.becomeTailor);
 
-
-
-
+// Edit User profile
+router.put("/edituser/:idUser", Middleware.auth, UserController.editUser);
 
 export default router;
