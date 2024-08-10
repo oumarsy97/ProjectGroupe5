@@ -98,7 +98,10 @@ credits: {
     type: Number,
     default: 50
 },
-
+freePostsUsed: {
+    type: Number,
+    default: 0
+}
 
 });
 
