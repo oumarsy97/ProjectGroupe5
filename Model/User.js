@@ -23,7 +23,7 @@ const userSchema = new Schema({
         enum: ["man", "woman"],
         default: "man",
     },
-    photo: String,
+    photos: [String], // Change photo to photos (array of strings)
     phone: {
         type: String,
         required: true
@@ -46,6 +46,7 @@ const userSchema = new Schema({
         default: Date.now,
     },
 });
+
 
 const User = model("User", userSchema);
 const validateUser = (user) => {

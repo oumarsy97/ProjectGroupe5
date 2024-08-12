@@ -12,11 +12,19 @@ import cron from 'node-cron';
 import { Story } from './Model/Story.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
 
+// Importation de Swagger
+import { swaggerUi, swaggerSpec } from './swaggerConfig.js';
+
+// Charger les variables d'environnement
+config();
+
 connectDB();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes de l'API
 app.use(`${process.env.BASE_URL}/users`, UserRoute);
 app.use(`${process.env.BASE_URL}/post`, PostRoute);
 app.use(`${process.env.BASE_URL}/follower`, FollowRoute);
@@ -24,7 +32,10 @@ app.use(`${process.env.BASE_URL}/report`, ReportRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
- 
+
+// Route pour Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 cron.schedule('0 * * * *', async () => { 
     try {
         console.log('Deleting expired stories...'); 
@@ -36,8 +47,8 @@ cron.schedule('0 * * * *', async () => {
     }
 }); 
 
- 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
 });

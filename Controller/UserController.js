@@ -7,46 +7,50 @@ import Messenger from "../utils/Messenger.js";
 export default class UserController {
   static addUser = async (req, res) => {
     upload(req, res, async function (err) {
-      if (err) {
-        return res.status(400).json({ message: err.message, data: null, status: 400 });
-      }
-
-      const { firtsname, lastname, email, password, role, phone, genre } = req.body;
-      const { error } = validateUser(req.body);
-      if (error) {
-        return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
-      }
-      try {
-        let user = await User.findOne({ email });
-        if (user) {
-          return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+        if (err) {
+            return res.status(400).json({ message: err.message, data: null, status: 400 });
         }
 
-        const newUser = await User.create({
-          firtsname,
-          lastname,
-          email,
-          password: await Utils.criptPassword(password),
-          role,
-          photos: req.files.map(file => file.path), // Handling multiple files
-          phone,
-          genre
-        });
+        const { firtsname, lastname, email, password, role, phone, genre } = req.body;
+        const { error } = validateUser(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
+        }
+        
+        try {
+            let user = await User.findOne({ email });
+            if (user) {
+                return res.status(400).json({ message: "User already exists", data: user, status: 400 });
+            }
 
-        // Envoi d'un e-mail de confirmation
-      const emailMessage = `Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
-      await Messenger.sendMail(email, firtsname, emailMessage);
+            const photos = req.files ? req.files.map(file => file.path) : []; // Ensure req.files is defined
 
-      // Envoi d'un SMS de confirmation
-      const smsMessage =` Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
-      await Messenger.sendSms(phone, firtsname, smsMessage);
+            const newUser = await User.create({
+                firtsname,
+                lastname,
+                email,
+                password: await Utils.criptPassword(password),
+                role,
+                photos, // Use photos array
+                phone,
+                genre
+            });
 
-        res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
-      } catch (error) {
-        res.status(500).json({ message: error.message, data: null, status: 500 });
-      }
+            // Envoi d'un e-mail de confirmation
+            const emailMessage = `Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
+            await Messenger.sendMail(email, firtsname, emailMessage);
+
+            // Envoi d'un SMS de confirmation
+            const smsMessage = `Bienvenue ${firtsname} ! Votre compte a été créé avec succès.`;
+            await Messenger.sendSms(phone, firtsname, smsMessage);
+
+            res.status(201).json({ message: "User created successfully", data: newUser, status: 201 });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: 500 });
+        }
     });
-  };
+};
+m
   
 
   static login = async (req, res) => {
