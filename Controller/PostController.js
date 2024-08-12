@@ -1,33 +1,80 @@
-import { User, Tailor } from '../Model/User.js';
+import { User,  Tailor } from "../Model/User.js";
 import { Post } from '../Model/Post.js';
+import joi from "joi";
 import { Chat } from '../Model/Chat.js';
 
 export default class PostController {
     static create = async (req, res) => {
-        const { title, description } = req.body;
+        const { title, description, gender, size } = req.body;
         const idUser = req.userId;
         const files = req.files;
-        const tailor = await Tailor.findOne({ idUser });
-        // console.log(tailor);  
-        //verifer si il au moins 10 credits 
-        if (tailor.credits < 10) {
-            return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
+    
+        // Validation avec Joi
+        const schema = joi.object({
+            title: joi.string().required(),
+            description: joi.string().required(),
+            gender: joi.string().valid("homme", "femme", "enfant garçon", "enfant fille").required(),
+            size: joi.string().valid("s", "xs", "m", "l", "xl", "xxl", "3xl").required(),
+        });
+    
+        const { error } = schema.validate({ title, description, gender, size });
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message, status: false });
         }
-
-
-        if (!files || files.length === 0) {
-            return res.status(400).json({ message: 'No files uploaded', status: false });
-        }
-
+    
         try {
-            tailor.credits -= 10;
-            await tailor.save();
+            const tailor = await Tailor.findOne({ idUser });
+            if (!tailor) {
+                return res.status(404).json({ message: 'Tailor not found', status: false });
+            }
+    
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded', status: false });
+            }
+    
+            // Gestion des crédits et des posts gratuits
+            let isFreePost = false;
+            if (tailor.credits < 10) {
+                if (tailor.freePostsUsed < 5) {
+                    tailor.freePostsUsed += 1; // Incrémenter le nombre de posts gratuits utilisés
+                    isFreePost = true;
+                } else {
+                    return res.status(400).json({ 
+                        message: 'You have used all 5 free posts and do not have enough credits. Please recharge your account to continue posting.', 
+                        status: false 
+                    });
+                }
+            }
+    
             // Obtenir les URLs Cloudinary des fichiers
-            const contentUrls = files.map(file => file.path); // `file.path` contient l'URL Cloudinary
-
-            const newPost = await Post.create({ title, description, content: contentUrls, author });
-            res.status(201).json({ message: 'Post created successfully', data: newPost, status: true });
-
+            const contentUrls = files.map(file => file.path); // file.path contient l'URL Cloudinary
+    
+            // Créer le nouveau post avec la description enrichie
+            const newPost = await Post.create({ 
+                title, 
+                description: { gender, size, text: description }, 
+                content: contentUrls, 
+                author: idUser 
+            });
+    
+            // Déduire les crédits si le tailleur en a utilisé
+            if (!isFreePost && tailor.credits >= 10) {
+                tailor.credits -= 10;
+            }
+    
+            await tailor.save();
+    
+            // Envoyer la réponse avec le nouveau post et le nombre de crédits restants
+            res.status(201).json({ 
+                message: isFreePost 
+                    ? 'You have created a post using a free post. You have ' + (5 - tailor.freePostsUsed) + ' free posts remaining.' 
+                    : 'Post created successfully', 
+                data: newPost, 
+                remainingCredits: tailor.credits,
+                status: true 
+            });
+            // Gestion des crédits et des posts gratuits           
+    
         } catch (error) {
             res.status(400).json({ message: error.message, data: null, status: false });
         }
@@ -114,28 +161,60 @@ export default class PostController {
         }
     }
 
-    //get all posts
+    
+        //get all posts
     static getAllPosts = async (req, res) => {
         try {
-            const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can list all posts", data: null, status: false });
-            }
-            const posts = await Post.find().populate('author', ['firstname', 'lastname']);
-            res.status(201).json({ message: "recup  posts saccessfully", data: posts, status: true });
+            const posts = await Post.aggregate([
+                {
+                    $lookup: {
+                        from: 'users', 
+                        localField: 'author',
+                        foreignField: '_id',
+                        as: 'author' 
+                    }
+                },
+                {
+                    $unwind: '$author' // Décomposez le tableau de l'auteur pour obtenir un objet unique
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        title: 1,
+                        description: 1,
+                       "firstname":'$author.firstname',
+                        "lastname":'$author.lastname',
+                        content: 1,
+                        comments: 1,
+                        likes: 1,
+                        dislikes: 1,
+                        views: 1,
+                        visibility: 1,
+                        mentions: 1,
+                        repost: 1,
+                        shares: 1,
+                        createdAt: 1,
+                        __v: 1
+                    }
+                }
+            ]);
+            res.status(201).json({message:"recup  posts saccessfully", data: posts,status: true});
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
     }
-
     //get post by id
     static getPostById = async (req, res) => {
         try {
+            let author;
             const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can list posts", data: null, status: false });
+            author = req.params.id;
+            if (!author) {
+                author = req.userId;
             }
-            const post = await Post.findById(req.params.id).populate('author', ['firstname', 'lastname']);
+
+            const post = await Post.findOne({ author });
+            console.log(post);
             if (!post) {
                 return res.status(404).json({ message: "Post not found", data: null, status: false });
             }
@@ -144,7 +223,7 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-
+    
     //delete post by id
     static deletePost = async (req, res) => {
         try {
@@ -178,27 +257,39 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-
     //like post
     static likePost = async (req, res) => {
         try {
-            const user = await User.findById(req.userId);
-            const post = await Post.findById(req.params.id);
-            if (!post) {
-                return res.status(404).json({ message: "Post not found", data: null, status: false });
+            const likerId = req.userId; 
+            const likedId = req.params.id; 
+
+            console.log("likerId:", likerId);
+            console.log("likedId:", likedId);
+
+            const liker = await User.findById(likerId); 
+            const post = await Post.findById(likedId); 
+            // Vérification si l'utilisateur ou le post existe
+            // if (!liker || !post) {
+            //     return res.status(404).json({ message: "User or Post not found", data: null, status: false });
+            // }
+            const likeIndex = post.likes.findIndex(like => like.likerId.toString() === likerId);
+            if (likeIndex !== -1) {
+                // Si l'utilisateur a déjà liké le post, supprimez le like
+                post.likes.splice(likeIndex, 1);
+                await post.save();
+                return res.status(200).json({ message: "Like removed", data: post, status: true });
+            } else {
+                // Si l'utilisateur n'a pas encore liké le post, ajoutez un like
+                post.likes.push({ likerId, likedId });
+                await post.save();
+                return res.status(200).json({ message: "Post liked", data: post, status: true });
             }
-            if (post.likes.includes(user._id)) {
-                return res.status(400).json({ message: "You already like this post", data: null, status: false });
-            }
-            post.likes.push(user._id);
-            await post.save();
-            res.status(200).json({ message: "Post liked", data: post, status: true });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
     }
     //unlike post
-    static unlikePost = async (req, res) => {
+    static dislikePost = async (req, res) => {
         try {
             const user = await User.findById(req.userId);
             const post = await Post.findById(req.params.id);
@@ -216,9 +307,7 @@ export default class PostController {
         }
     };
 
-
-    //repost 
-    static repost = async (req, res) => {
+   static repost = async (req, res) => {
         try {
             const { idPost } = req.params;
             const idUser = req.userId;
@@ -279,6 +368,43 @@ export default class PostController {
         }
     }
 
+   
+    static noterPost = async (req, res) => {
+        try {
+            const { idPost } = req.body;
+            const idUser = req.userId;
+            const { note } = req.body;
+
+            if (note < 1 || note > 5) {
+                return res.status(400).json({ message: "La note doit être comprise entre 1 et 5", status: false });
+            }
+
+            const user = await User.findById(idUser);
+            if (!user) return res.status(404).json({ message: "Utilisateur non trouvé", data: null, status: 404 });
+
+            const post = await Post.findById(idPost);
+            if (!post) return res.status(404).json({ message: "Post non trouvé", data: null, status: 404 });
+
+            const notesExist = post.notes.findIndex(r => r.userId.toString() === idUser);
+            if (notesExist !== -1) {
+                post.notes[notesExist].note = note;
+            } else {
+                post.notes.push({ userId: idUser, note });
+            }
+
+            const tailor = await Tailor.findOne({ idUser: post.author });
+            if (tailor) {
+                tailor.votes = (tailor.votes || 0) + note; // Increment votes by the note value
+                await tailor.save();
+            }
+
+            await post.save();
+            res.status(200).json({ message: "Post noté avec succès", data: post.notes, status: true });
+        } catch (error) {
+            res.status(500).json({ message: error.message, data: null, status: false });
+        }
+    }
+
     //delete comment
     static deleteComment = async (req, res) => {
         try {
@@ -312,11 +438,9 @@ export default class PostController {
             // Trouver l'utilisateur
             const user = await User.findById(userId);
             if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-
             // Trouver le post
             const post = await Post.findById(idPost);
             if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-
             // Trouver le commentaire
             const comment = post.comments.id(idComment);
             if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
@@ -325,13 +449,11 @@ export default class PostController {
             if (!comment.response) {
                 comment.response = [];
             }
-
             // Créer la nouvelle réponse
             const newReply = {
                 user: user._id,
                 text
             };
-
             // Ajouter la réponse au tableau
             comment.response.push(newReply);
             await post.save();
@@ -346,23 +468,18 @@ export default class PostController {
         try {
             const { idPost, idComment, idReply } = req.params;
             const userId = req.userId;
-    
             // Trouver l'utilisateur
             const user = await User.findById(userId);
             if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
-    
             // Trouver le post
             const post = await Post.findById(idPost);
             if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
-    
             // Trouver le commentaire
             const comment = post.comments.id(idComment);
             if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
-    
             // Trouver l'index de la réponse à supprimer
             const replyIndex = comment.response.findIndex(reply => reply._id.toString() === idReply);
             if (replyIndex === -1) return res.status(404).json({ message: "Reply not found", data: null, status: 404 });
-    
             // Supprimer la réponse
             comment.response.splice(replyIndex, 1);
             await post.save();
@@ -382,23 +499,19 @@ export default class PostController {
             if (!user) {
                 return res.status(404).json({ message: "User not found", status: false });
             }
-
             // Vérifier si l'utilisateur est un tailleur
             const isTailor = await Tailor.findOne({ idUser: userId });
             if (isTailor) {
                 return res.status(403).json({ message: "Tailors cannot view their own posts", status: false });
             }
-
             const post = await Post.findById(postId);
             if (!post) {
                 return res.status(404).json({ message: "Post not found", status: false });
             }
-
             // Vérifier si l'auteur du post est le même que l'utilisateur actuel
             if (post.author.toString() === userId) {
                 return res.status(403).json({ message: "You cannot view your own post", status: false });
             }
-
             post.views += 1;
             await post.save();
 
@@ -408,26 +521,98 @@ export default class PostController {
             res.status(500).json({ message: "An error occurred while viewing the post", error: error.message });
         }
     }
+  
 
-    static getTopTailors = async (req, res) => {
-        try {
-            const topTailors = await Tailor.find()
-                .sort({ averageRating: -1, totalRatings: -1 })
-                .limit(10)
-                .populate('idUser', 'firtsname lastname')
-                .select('totalRatings');
-            const formattedTailors = topTailors.map(tailor => ({
-                tailorname: `${tailor.idUser.firtsname} ${tailor.idUser.lastname}`,
-                // averageRating: tailor.averageRating,
-                totalRatings: tailor.totalRatings
-            }));
-            res.status(200).json({
-                message: "Top tailors retrieved",
-                data: formattedTailors,
-                status: true
-            });
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
+
+
+
+static deleteReply = async (req, res) => {
+    try {
+        const { idPost, idComment, idReply } = req.params;
+        const userId = req.userId;
+
+        // Trouver l'utilisateur
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+
+        // Trouver le post
+        const post = await Post.findById(idPost);
+        if (!post) return res.status(404).json({ message: "Post not found", data: null, status: 404 });
+
+        // Trouver le commentaire
+        const comment = post.comments.id(idComment);
+        if (!comment) return res.status(404).json({ message: "Comment not found", data: null, status: 404 });
+
+        // Trouver l'index de la réponse à supprimer
+        const replyIndex = comment.response.findIndex(reply => reply._id.toString() === idReply);
+        if (replyIndex === -1) return res.status(404).json({ message: "Reply not found", data: null, status: 404 });
+
+        // Supprimer la réponse
+        comment.response.splice(replyIndex, 1);
+        await post.save();
+
+        res.status(200).json({ message: "Reply deleted successfully", data: post, status: 200 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
     }
+};    
+
+static viewPost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.userId;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found", status: false });
+        }
+
+        // Vérifier si l'utilisateur est un tailleur
+        const isTailor = await Tailor.findOne({ idUser: userId });
+        if (isTailor) {
+            return res.status(403).json({ message: "Tailors cannot view their own posts", status: false });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found", status: false });
+        }
+
+        // Vérifier si l'auteur du post est le même que l'utilisateur actuel
+        if (post.author.toString() === userId) {
+            return res.status(403).json({ message: "You cannot view your own post", status: false });
+        }
+
+        post.views += 1;
+        await post.save();
+
+        res.status(200).json({ message: "Post viewed", data: post, status: true });
+    } catch (error) {
+        console.error("Error in viewPost:", error);
+        res.status(500).json({ message: "An error occurred while viewing the post", error: error.message });
+    }
+}
+
+static getTopTailors = async (req, res) => {
+    try {
+        const topTailors = await Tailor.find()
+            .sort({ averageRating: -1, totalRatings: -1 })
+            .limit(10)
+            .populate('idUser', 'firtsname lastname')
+            .select('totalRatings');
+        const formattedTailors = topTailors.map(tailor => ({
+            tailorname: `${tailor.idUser.firtsname} ${tailor.idUser.lastname}`,
+            // averageRating: tailor.averageRating,
+            totalRatings: tailor.totalRatings
+        }));
+        res.status(200).json({
+            message: "Top tailors retrieved",
+            data: formattedTailors,
+            status: true
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+ 
 }

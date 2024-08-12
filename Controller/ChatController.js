@@ -26,7 +26,7 @@ const ChatController = {
       }
 
       // Obtenir les URLs Cloudinary des fichiers
-      const contentUrls = files.map((file) => file.path); // file.path contient l'URL Cloudinar
+      const contentUrls = files.map((file) => file.path); // `file.path` contient l'URL Cloudinar
 
       // Trouvez une discussion existante entre l'initiateur et le destinataire
       let chat = await Chat.findOne({
@@ -40,7 +40,7 @@ const ChatController = {
         chat = await Chat.create({
             initiator: initiatorId,
             recipient: recipientId,
-            messages: []
+            messages: [] // Initialise avec un tableau vide pour stocker les messages
         });
     }
 
