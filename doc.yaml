@@ -4,7 +4,6 @@ info:
   description: Documentation complète de l'API
   version: 1.0.0
 
-
 servers:
   - url: http://localhost:5000/api/v1
     description: Serveur de développement
@@ -37,6 +36,8 @@ paths:
       summary: Créer un nouveau post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -53,6 +54,8 @@ paths:
       summary: Supprimer un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -74,6 +77,8 @@ paths:
       summary: Mettre à jour un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -90,6 +95,8 @@ paths:
       summary: Aimer un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -108,6 +115,8 @@ paths:
       summary: Ne pas aimer un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -141,6 +150,8 @@ paths:
       summary: Noter un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Post noté avec succès
@@ -166,6 +177,8 @@ paths:
       summary: Supprimer un commentaire d'un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: idPost
           in: path
@@ -190,6 +203,8 @@ paths:
       summary: Répondre à un commentaire d'un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: idPost
           in: path
@@ -222,6 +237,8 @@ paths:
       summary: Supprimer une réponse à un commentaire d'un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: idPost
           in: path
@@ -252,6 +269,8 @@ paths:
       summary: Reposter un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: idPost
           in: path
@@ -270,6 +289,8 @@ paths:
       summary: Supprimer un repost
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: idPost
           in: path
@@ -288,6 +309,8 @@ paths:
       summary: Signaler un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: postId
           in: path
@@ -306,6 +329,8 @@ paths:
       summary: Partager un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
@@ -325,6 +350,8 @@ paths:
       summary: Voir un post
       tags:
         - Post
+      security:
+        - bearerAuth: []
       parameters:
         - name: postId
           in: path
@@ -337,7 +364,6 @@ paths:
           description: Post vu avec succès
         '404':
           description: Post non trouvé
-
 
   /users/register:
     post:
@@ -377,316 +403,122 @@ paths:
         '200':
           description: Connexion réussie
         '401':
-          description: Informations d'identification invalides
+          description: Identifiants invalides
 
-  /users:
-    get:
-      summary: Obtenir la liste des utilisateurs
-      tags:
-        - Utilisateurs
-      responses:
-        '200':
-          description: Liste des utilisateurs
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-
-  /users/{id}:
+  /users/deleteAccount:
     delete:
-      summary: Supprimer un utilisateur
+      summary: Supprimer le compte d'un utilisateur
       tags:
         - Utilisateurs
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID de l'utilisateur à supprimer
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Utilisateur supprimé avec succès
-        '404':
-          description: Utilisateur non trouvé
-
-    put:
-      summary: Mettre à jour un utilisateur
-      tags:
-        - Utilisateurs
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID de l'utilisateur à mettre à jour
-          schema:
-            type: string
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+                - email
       responses:
         '200':
-          description: Utilisateur mis à jour avec succès
+          description: Compte supprimé avec succès
         '404':
-          description: Utilisateur non trouvé
+          description: Compte non trouvé
 
-  /users/tailor/{id}:
-    put:
-      summary: Mettre à jour un tailleur
-      tags:
-        - Utilisateurs
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID du tailleur à mettre à jour
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Tailor'
-      responses:
-        '200':
-          description: Tailleur mis à jour avec succès
-        '404':
-          description: Tailleur non trouvé
-
-  /users/addtailor:
+  /users/updateProfile:
     post:
-      summary: Ajouter un nouveau tailleur
+      summary: Mettre à jour le profil utilisateur
       tags:
-        - Utilisateurs
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Tailor'
+              type: object
+              properties:
+                name:
+                  type: string
+                bio:
+                  type: string
+                avatar:
+                  type: string
+              required:
+                - name
       responses:
-        '201':
-          description: Tailleur ajouté avec succès
+        '200':
+          description: Profil mis à jour avec succès
         '400':
           description: Requête invalide
 
-  /users/gettailor:
+  /users/getProfile:
     get:
-      summary: Obtenir la liste des tailleurs
+      summary: Obtenir le profil utilisateur
       tags:
         - Utilisateurs
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Liste des tailleurs
-          content:
-            application/json:
-              type: array
-              items:
-                $ref: '#/components/schemas/Tailor'
-
-  /users/addfavoris/{idPost}:
-    post:
-      summary: Ajouter un post aux favoris
-      tags:
-        - Utilisateurs
-      parameters:
-        - name: idPost
-          in: path
-          required: true
-          description: ID du post à ajouter aux favoris
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Post ajouté aux favoris
-        '404':
-          description: Post non trouvé
-
-  /users/deletefavoris/{idPost}:
-    delete:
-      summary: Supprimer un post des favoris
-      tags:
-        - Utilisateurs
-      parameters:
-        - name: idPost
-          in: path
-          required: true
-          description: ID du post à supprimer des favoris
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Post supprimé des favoris
-        '404':
-          description: Post non trouvé
-
-  /users/search:
-    get:
-      summary: Rechercher des utilisateurs
-      tags:
-        - Utilisateurs
-      responses:
-        '200':
-          description: Résultats de la recherche
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-
-  /users/addcredits:
-    post:
-      summary: Ajouter des crédits à un utilisateur
-      tags:
-        - Utilisateurs
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: number
-              required:
-                - amount
-      responses:
-        '200':
-          description: Crédits ajoutés avec succès
-
-  /users/achatcode:
-    post:
-      summary: Acheter un code
-      tags:
-        - Utilisateurs
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                code:
-                  type: string
-              required:
-                - code
-      responses:
-        '200':
-          description: Code acheté avec succès
-
-  /users/monprofil:
-    get:
-      summary: Obtenir les informations du profil de l'utilisateur
-      tags:
-        - Utilisateurs
-      responses:
-        '200':
-          description: Informations du profil récupérées avec succès
+          description: Profil utilisateur récupéré avec succès
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '404':
+          description: Profil non trouvé
 
-  /users/becometailor:
+  /users/follow/{userId}:
     post:
-      summary: Devenir tailleur
+      summary: Suivre un utilisateur
       tags:
         - Utilisateurs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID de l'utilisateur à suivre
+          schema:
+            type: string
       responses:
         '200':
-          description: Utilisateur promu au statut de tailleur avec succès
+          description: Utilisateur suivi avec succès
+        '404':
+          description: Utilisateur non trouvé
 
+  /users/unfollow/{userId}:
+    post:
+      summary: Ne plus suivre un utilisateur
+      tags:
+        - Utilisateurs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: ID de l'utilisateur à ne plus suivre
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Utilisateur n'est plus suivi avec succès
+        '404':
+          description: Utilisateur non trouvé
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-        firtsname:
-          type: string
-        lastname:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-        genre:
-          type: string
-          enum:
-            - man
-            - woman
-        photo:
-          type: string
-        phone:
-          type: string
-        role:
-          type: string
-          enum:
-            - tailor
-            - user
-        favoris:
-          type: array
-          items:
-            type: string
-        created:
-          type: string
-          format: date-time
-      required:
-        - id
-        - firtsname
-        - lastname
-        - email
-        - phone
-
-    Tailor:
-      type: object
-      properties:
-        id:
-          type: string
-        address:
-          type: string
-        description:
-          type: string
-        averageRating:
-          type: number
-        totalRatings:
-          type: number
-        follows:
-          type: array
-          items:
-            type: string
-        votes:
-          type: number
-        created:
-          type: string
-          format: date-time
-        credits:
-          type: number
-        freePostsUsed:
-          type: number
-        userId:
-          type: string
-      required:
-        - id
-        - address
-        - description
-        - votes
-
-    Follow:
-      type: object
-      properties:
-        followerId:
-          type: string
-        followedId:
-          type: string
-      required:
-        - followerId
-        - followedId
-
     Post:
       type: object
       properties:
@@ -696,19 +528,43 @@ components:
           type: string
         content:
           type: string
+        authorId:
+          type: string
+        likes:
+          type: integer
+        dislikes:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
-        - id
         - title
         - content
-          securitySchemes:
-   
+        - authorId
 
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-    
-
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - name
+        - email
 
