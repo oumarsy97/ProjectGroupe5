@@ -224,39 +224,6 @@ export default class PostController {
         }
     }
     
-    //delete post by id
-    static deletePost = async (req, res) => {
-        try {
-            const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can delete posts", data: null, status: false });
-            }
-            const post = await Post.findByIdAndDelete(req.params.id);
-            if (!post) {
-                return res.status(404).json({ message: "Post not found", data: null, status: false });
-            }
-            res.status(200).json({ message: "Post deleted", data: post, status: true });
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
-    //update post by id
-    static updatePost = async (req, res) => {
-        try {
-            const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can update posts", data: null, status: false });
-            }
-            const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!post) {
-                return res.status(404).json({ message: "Post not found", data: null, status: false });
-            }
-            res.status(200).json({ message: "Post updated", data: post, status: true });
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    }
     //like post
     static likePost = async (req, res) => {
         try {
@@ -325,7 +292,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
     //delete repost
     static deleteRepost = async (req, res) => {
         try {
@@ -344,7 +310,6 @@ export default class PostController {
             res.status(500).json({ message: error.message, data: null, status: 500 });
         }
     }
-
     //comment a post
     static comment = async (req, res) => {
         try {
@@ -616,3 +581,5 @@ static getTopTailors = async (req, res) => {
 }
  
 }
+
+

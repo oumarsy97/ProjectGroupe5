@@ -181,7 +181,6 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   };
-
   //update tailor
   static updateTailor = async (req, res) => {
       const { error } = validateTailor(req.body);
@@ -300,6 +299,8 @@ export default class UserController {
   static monprofil = async (req, res) => {
     try {
       const idUser = req.userId;
+      console.log(req);
+      
       const user = await User.findById(idUser);
   
       if (!user) {
@@ -348,7 +349,7 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   };
-  
+
 
   static search = async (req, res) => {
     try {
