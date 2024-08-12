@@ -8,7 +8,6 @@ export default class PostController {
         const idUser = req.userId;
         const files = req.files;
         const tailor = await Tailor.findOne({ idUser });  
-        // console.log(tailor);  
         //verifer si il au moins 10 credits 
         if (tailor.credits < 10) {
           return res.status(400).json({ message: 'You do not have enough credits, please charge your account', status: false });
@@ -26,7 +25,7 @@ export default class PostController {
         } catch (error) {
           res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
+      }
       // delete post
       static delete = async (req, res) => {
         const { postId } = req.params;
@@ -41,7 +40,7 @@ export default class PostController {
         } catch (error) {
           res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
+      }
       //update post
       static update = async (req, res) => {
         const { postId } = req.params;
@@ -59,10 +58,7 @@ export default class PostController {
         } catch (error) {
           res.status(400).json({ message: error.message, data: null, status: false });
         }
-      };
-    
-      // get all posts
-      static getAllPosts
+      }
     static share = async (req, res) => {
         const { postId, recipientId } = req.body;
         const initiatorId = req.userId;
@@ -162,24 +158,7 @@ export default class PostController {
             res.status(500).json({ message: error.message });
         }
     }
-    //delete post by id
     
-    //update post by id
-    static updatePost = async (req, res) => {
-        try {
-            const user = await User.findById(req.userId);
-            if (user.role !== "tailor") {
-                res.status(403).json({ message: "Only tailors can update posts", data: null, status: false });
-            }
-            const post = await Post.findByIdAndUpdate(req.params.id, req.body, { new: true });
-            if (!post) {
-                return res.status(404).json({ message: "Post not found", data: null, status: false });
-            }
-            res.status(200).json({ message: "Post updated", data: post, status: true });
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
-    }
     //like post
     static likePost = async (req, res) => {
         try {
