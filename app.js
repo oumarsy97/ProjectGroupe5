@@ -14,6 +14,10 @@ import DiscussionRoute from './Route/DiscussionRoute.js';
 
 connectDB();
 
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
