@@ -1,29 +1,20 @@
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs';
+import path from 'path';
 
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'API Documentation',
-      version: '1.0.0',
-      description: 'Documentation de l\'API',
-      contact: {
-        name: 'Votre Nom',
-        url: 'http://votre-site.com',
-        email: 'votre-email@domaine.com'
-      }
-    },
-    servers: [
-      {
-        url: 'http://localhost:5000', // L'URL de votre serveur de développement
-        description: 'Serveur de développement'
-      }
-    ]
-  },
-  apis: ['../app.js', '../Route/*.js'], // Chemin vers les fichiers où les routes sont définies
-};
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+const swaggerDocument = YAML.load(path.join(__dirname, '../doc.yaml'));
+
+const setupSwagger = (app) => {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  };
+  
+  export default setupSwagger;
+  
+  
