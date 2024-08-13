@@ -1,0 +1,1202 @@
+openapi: 3.0.0
+info:
+  title: Documentation de l'API
+  description: Documentation complète de l'API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Serveur de développement
+
+security:
+  - bearerAuth: []
+
+paths:
+  /post/getPostById/{id}:
+    get:
+      summary: Obtenir un post par ID
+      tags:
+        - Post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du post à obtenir
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: Post non trouvé
+
+  /post/create:
+    post:
+      summary: Créer un nouveau post
+      tags:
+        - Post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: Post créé avec succès
+        '400':
+          description: Requête invalide
+
+  /post/delete:
+    post:
+      summary: Supprimer un post
+      tags:
+        - Post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+              required:
+                - id
+      responses:
+        '200':
+          description: Post supprimé avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/update:
+    post:
+      summary: Mettre à jour un post
+      tags:
+        - Post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '200':
+          description: Post mis à jour avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/likePost/{id}:
+    post:
+      summary: Aimer un post
+      tags:
+        - Post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du post à aimer
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post aimé avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/dislikePost/{id}:
+    post:
+      summary: Ne pas aimer un post
+      tags:
+        - Post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du post à ne pas aimer
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post non aimé avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/getAllPosts:
+    get:
+      summary: Obtenir tous les posts
+      tags:
+        - Post
+      responses:
+        '200':
+          description: Liste des posts récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+
+  /post/notePost:
+    get:
+      summary: Noter un post
+      tags:
+        - Post
+      responses:
+        '200':
+          description: Post noté avec succès
+
+  /post/comment/{idPost}:
+    get:
+      summary: Obtenir les commentaires d'un post
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post dont obtenir les commentaires
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Commentaires récupérés avec succès
+
+  /post/comment/{idPost}/{idComment}:
+    delete:
+      summary: Supprimer un commentaire d'un post
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post
+          schema:
+            type: string
+        - name: idComment
+          in: path
+          required: true
+          description: ID du commentaire à supprimer
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Commentaire supprimé avec succès
+        '404':
+          description: Commentaire ou post non trouvé
+
+  /post/comment/{idPost}/{idComment}/reponse:
+    post:
+      summary: Répondre à un commentaire d'un post
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post
+          schema:
+            type: string
+        - name: idComment
+          in: path
+          required: true
+          description: ID du commentaire
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reply:
+                  type: string
+              required:
+                - reply
+      responses:
+        '200':
+          description: Réponse ajoutée avec succès
+
+  /post/comment/{idPost}/{idComment}/reponse/{idReply}:
+    delete:
+      summary: Supprimer une réponse à un commentaire d'un post
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post
+          schema:
+            type: string
+        - name: idComment
+          in: path
+          required: true
+          description: ID du commentaire
+          schema:
+            type: string
+        - name: idReply
+          in: path
+          required: true
+          description: ID de la réponse à supprimer
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Réponse supprimée avec succès
+        '404':
+          description: Réponse, commentaire ou post non trouvé
+
+  /post/repost/{idPost}:
+    post:
+      summary: Reposter un post
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post à reposter
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post republié avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/repost/{idPost}:
+    delete:
+      summary: Supprimer un repost
+      tags:
+        - Post
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post à supprimer du repost
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Repost supprimé avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/report/{postId}:
+    post:
+      summary: Signaler un post
+      tags:
+        - Post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: ID du post à signaler
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post signalé avec succès
+        '404':
+          description: Post non trouvé
+
+  /post/share:
+    post:
+      summary: Partager un post
+      tags:
+        - Post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: string
+              required:
+                - postId
+      responses:
+        '200':
+          description: Post partagé avec succès
+
+  /post/view/{postId}:
+    post:
+      summary: Voir un post
+      tags:
+        - Post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: ID du post à voir
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post vu avec succès
+        '404':
+          description: Post non trouvé
+
+  paths:
+  /post/comment/{idPost}/{idComment}/reponse:
+    post:
+      summary: "Reply to a comment"
+      tags:
+        - "Post"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "idPost"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the post"
+        - name: "idComment"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the comment"
+      requestBody:
+        description: "Reply content"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: "Reply message content"
+      responses:
+        '200':
+          description: "Reply added successfully"
+        '404':
+          description: "Comment not found"
+  
+  /post/comment/{idPost}/{idComment}/reponse/{idReply}:
+    delete:
+      summary: "Delete a reply to a comment"
+      tags:
+        - "Post"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "idPost"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the post"
+        - name: "idComment"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the comment"
+        - name: "idReply"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the reply to delete"
+      responses:
+        '200':
+          description: "Reply deleted successfully"
+        '404':
+          description: "Reply not found"
+
+
+  /users/register:
+    post:
+      summary: Enregistrer un nouvel utilisateur
+      tags:
+        - Utilisateurs
+      security: []  # Pas besoin d'authentification pour s'enregistrer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+        '400':
+          description: Requête invalide
+
+  /users/login:
+    post:
+      summary: Connexion d'un utilisateur
+      tags:
+        - Utilisateurs
+      security: []  # Pas besoin d'authentification pour se connecter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Informations d'identification invalides
+
+  /users:
+    get:
+      summary: Obtenir la liste des utilisateurs
+      tags:
+        - Utilisateurs
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/{id}:
+    delete:
+      summary: Supprimer un utilisateur
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'utilisateur à supprimer
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Utilisateur supprimé avec succès
+        '404':
+          description: Utilisateur non trouvé
+
+    put:
+      summary: Mettre à jour un utilisateur
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID de l'utilisateur à mettre à jour
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès
+        '404':
+          description: Utilisateur non trouvé
+
+  /users/tailor/{id}:
+    put:
+      summary: Mettre à jour un tailleur
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du tailleur à mettre à jour
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tailor'
+      responses:
+        '200':
+          description: Tailleur mis à jour avec succès
+        '404':
+          description: Tailleur non trouvé
+
+  /users/addtailor:
+    post:
+      summary: Ajouter un nouveau tailleur
+      tags:
+        - Utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tailor'
+      responses:
+        '201':
+          description: Tailleur ajouté avec succès
+        '400':
+          description: Requête invalide
+
+  /users/gettailor:
+    get:
+      summary: Obtenir la liste des tailleurs
+      tags:
+        - Utilisateurs
+      responses:
+        '200':
+          description: Liste des tailleurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tailor'
+
+  /users/addfavoris/{idPost}:
+    post:
+      summary: Ajouter un post aux favoris
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post à ajouter aux favoris
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post ajouté aux favoris
+        '404':
+          description: Post non trouvé
+
+  /users/deletefavoris/{idPost}:
+    delete:
+      summary: Supprimer un post des favoris
+      tags:
+        - Utilisateurs
+      parameters:
+        - name: idPost
+          in: path
+          required: true
+          description: ID du post à supprimer des favoris
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Post supprimé des favoris
+        '404':
+          description: Post non trouvé
+
+  /users/search:
+    get:
+      summary: Rechercher des utilisateurs
+      tags:
+        - Utilisateurs
+      responses:
+        '200':
+          description: Résultats de la recherche
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /users/addcredits:
+    post:
+      summary: Ajouter des crédits à un utilisateur
+      tags:
+        - Utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+              required:
+                - amount
+      responses:
+        '200':
+          description: Crédits ajoutés avec succès
+
+  /users/achatcode:
+    post:
+      summary: Acheter un code
+      tags:
+        - Utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+              required:
+                - code
+      responses:
+        '200':
+          description: Code acheté avec succès
+
+  /users/monprofil:
+    get:
+      summary: Obtenir les informations du profil de l'utilisateur
+      tags:
+        - Utilisateurs
+      responses:
+        '200':
+          description: Informations du profil récupérées avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/becometailor:
+    post:
+      summary: Devenir tailleur
+      tags:
+        - Utilisateurs
+      responses:
+        '200':
+          description: Utilisateur promu au statut de tailleur avec succès
+  /discussions/start:
+    post:
+      summary: Démarrer une nouvelle discussion
+      tags:
+        - Discussions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientId:
+                  type: string
+                postId:
+                  type: string
+                message:
+                  type: string
+              required:
+                - recipientId
+                - message
+      responses:
+        '201':
+          description: Discussion démarrée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Discussion'
+        '404':
+          description: Expéditeur ou destinataire non trouvé
+        '400':
+          description: Requête invalide
+
+  /discussions/{discussionId}/send:
+    post:
+      summary: Envoyer un message dans une discussion
+      tags:
+        - Discussions
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+              required:
+                - content
+      responses:
+        '200':
+          description: Message envoyé avec succès
+        '404':
+          description: Discussion non trouvée
+        '400':
+          description: Requête invalide
+
+  /discussions/{discussionId}/markSeen:
+    post:
+      summary: Marquer les messages d'une discussion comme lus
+      tags:
+        - Discussions
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages marqués comme lus avec succès
+        '404':
+          description: Discussion non trouvée
+        '400':
+          description: Requête invalide
+
+  /discussions:
+    get:
+      summary: Obtenir toutes les discussions de l'utilisateur
+      tags:
+        - Discussions
+      responses:
+        '200':
+          description: Discussions récupérées avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Discussion'
+        '400':
+          description: Erreur lors de la récupération des discussions
+
+  /chat/delete/{chatId}/{messageId}:
+    delete:
+      summary: "Delete a specific message in a chat"
+      tags:
+        - "Chat"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "chatId"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the chat"
+        - name: "messageId"
+          in: path
+          required: true
+          schema:
+            type: string
+            description: "ID of the message to delete"
+      responses:
+        '200':
+          description: "Message deleted"
+        '404':
+          description: "Message not found"
+
+  /follows/follow:
+    post:
+      summary: Suivre un utilisateur
+      tags:
+        - Follow
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                followedId:
+                  type: string
+              required:
+                - followedId
+      responses:
+        '201':
+          description: Suivi créé avec succès
+        '400':
+          description: Requête invalide ou suivi déjà existant
+
+  /follows/unfollow:
+    post:
+      summary: Ne plus suivre un utilisateur
+      tags:
+        - Follow
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                followedId:
+                  type: string
+              required:
+                - followedId
+      responses:
+        '200':
+          description: Suivi supprimé avec succès
+        '400':
+          description: Requête invalide ou suivi non trouvé
+
+  /follows/followers/{id}:
+    get:
+      summary: Obtenir les followers d'un utilisateur
+      tags:
+        - Follow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des followers récupérée avec succès
+        '500':
+          description: Erreur serveur
+
+  /follows/following/{id}:
+    get:
+      summary: Obtenir les utilisateurs suivis par un utilisateur
+      tags:
+        - Follow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des suivis récupérée avec succès
+        '500':
+          description: Erreur serveur
+
+  /chats/create:
+    post:
+      summary: Créer un chat et envoyer un message
+      tags:
+        - Chat
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                recipientId:
+                  type: string
+                text:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Message envoyé avec succès
+        '400':
+          description: Requête invalide
+        '404':
+          description: Utilisateur non trouvé
+
+  /chats/{chatId}/messages:
+    get:
+      summary: Obtenir les messages d'un chat
+      tags:
+        - Chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages récupérés avec succès
+        '404':
+          description: Chat non trouvé
+
+  /chats/mark-seen:
+    post:
+      summary: Marquer un message comme lu
+      tags:
+        - Chat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chatId:
+                  type: string
+                messageId:
+                  type: string
+              required:
+                - chatId
+                - messageId
+      responses:
+        '200':
+          description: Message marqué comme lu
+        '404':
+          description: Chat ou message non trouvé
+
+  /stories/create:
+    post:
+      summary: Créer une nouvelle story
+      tags:
+        - Story
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '201':
+          description: Story créée avec succès
+        '400':
+          description: Requête invalide
+
+  /stories/{idStory}:
+    delete:
+      summary: Supprimer une story
+      tags:
+        - Story
+      parameters:
+        - name: idStory
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Story supprimée avec succès
+        '404':
+          description: Story non trouvée
+
+  /stories/{idStory}/view:
+    post:
+      summary: Voir une story
+      tags:
+        - Story
+      parameters:
+        - name: idStory
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vue de la story enregistrée avec succès
+        '404':
+          description: Story non trouvée
+
+  /stories/{idStory}/views:
+    get:
+      summary: Obtenir le nombre de vues d'une story
+      tags:
+        - Story
+      parameters:
+        - name: idStory
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Nombre de vues récupéré avec succès
+        '404':
+          description: Story non trouvée
+
+  /stories/my:
+    get:
+      summary: Obtenir mes stories
+      tags:
+        - Story
+      responses:
+        '200':
+          description: Stories récupérées avec succès
+
+  /stories/all:
+    get:
+      summary: Obtenir toutes les stories
+      tags:
+        - Story
+      responses:
+        '200':
+          description: Toutes les stories récupérées avec succès
+
+  /stories/following:
+    get:
+      summary: Obtenir les stories des utilisateurs suivis
+      tags:
+        - Story
+      responses:
+        '200':
+          description: Stories des utilisateurs suivis récupérées avec succès
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        genre:
+          type: string
+          enum:
+            - man
+            - woman
+        photo:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum:
+            - tailor
+            - user
+        favoris:
+          type: array
+          items:
+            type: string
+        created:
+          type: string
+          format: date-time
+      required:
+        - id
+        - firstname
+        - lastname
+        - email
+        - phone
+
+    Tailor:
+      type: object
+      properties:
+        id:
+          type: string
+        address:
+          type: string
+        description:
+          type: string
+        averageRating:
+          type: number
+        totalRatings:
+          type: number
+        follows:
+          type: array
+          items:
+            type: string
+        votes:
+          type: number
+        created:
+          type: string
+
+    Discussion:
+      type: object
+      properties:
+        id:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        post:
+          $ref: '#/components/schemas/Post'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        sender:
+          $ref: '#/components/schemas/User'
+        content:
+          type: string
+        seenBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+
+    Follow:
+      type: object
+      properties:
+        followerId:
+          type: string
+        followedId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Chat:
+      type: object
+      properties:
+        initiator:
+          type: string
+        recipient:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+            
+    Story:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: array
+          items:
+            type: string
+        author:
+          type: string
+        views:
+          type: number
+        createdAt:
+          type: string
+          format: date-time

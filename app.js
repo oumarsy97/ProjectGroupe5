@@ -11,6 +11,7 @@ import cron from 'node-cron';
 import { Story } from './Model/Story.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
 import ChatRoute from './Route/ChatRoute.js';   
+import { swaggerUi, swaggerSpec } from './config/swaggerConfig.js';
 
 config();
 // Messenger.sendSms('0676960964', 'Seydina', 'Hello from Tailor Digital');
@@ -28,7 +29,8 @@ app.use(`${process.env.BASE_URL}/report`, ReportRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
- 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 cron.schedule('0 * * * *', async () => {
     try {
         console.log('Deleting expired stories...'); 
@@ -43,4 +45,5 @@ cron.schedule('0 * * * *', async () => {
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
 });

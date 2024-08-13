@@ -99,7 +99,7 @@ export default class UserController {
         if (error) return res.status(400).json({ message: error.details[0].message, data: null, status: 400 });
 
         try {
-          let user = await User.findById({ idUser });
+          let user = await User.findById(idUser);
           if (!user) return res.status(400).json({ message: "User doesn't exist", data: null, status: 400 });
           const newtailor = await Tailor.create({ idUser, address, description });
           // Envoi d'un e-mail de confirmation
