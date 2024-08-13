@@ -1,4 +1,4 @@
-import { User, validateUser, Tailor, validateTailor } from "../Model/User.js";
+import { User, validateUser, Tailor, validateTailor, Vendor, validateVendor } from "../Model/User.js";
 import upload from '../config/multerConfig.js'; // Import de la configuration multer
 import Utils from "../utils/utils.js";
 import GenerateCode from "../Model/GenerateCode.js";
@@ -74,8 +74,8 @@ export default class UserController {
   //Tailor
 
       static addTailor = async (req, res) => {
-        const { idUser, address, description } = req.body;
-        console.log('idUser : ' + idUser, 'address :' + address);
+        // const { idUser, address, description } = req.body;
+        // console.log('idUser : ' + idUser, 'address :' + address);
         const { error } = validateTailor(req.body);
         if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
          try {  
@@ -448,6 +448,93 @@ static becometailor = async (req, res) => {
         res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   }
-        
+
+  //becomeVendor
+  static becomeVendor = async (req, res) => {
+    try {
+        const idUser = req.userId;
+        const {description, address} = req.body;
+        const user = await User.findById(idUser);
+        if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+        if(user.role === "vendor") return res.status(400).json({ message: "User already vendor", data: null, status: 400 });
+        const newVendor = new Vendor({
+          idUser:user.id,
+          description,
+          address
+        });
+        await newVendor.save();
+        user.role = "vendor";
+        await user.save();
+        res.status(200).json({ message: "User become vendor successfully", data: newVendor, status: 200 });
+    } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  static addvendor = async (req, res) => {
+    try {
+      const { error } = validateVendor(req.body);
+      if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+       try {  
+        //creer dabord le user puis le tailor
+        const {firtsname, lastname, email,phone, password, address, description } = req.body;
+      //   console.log(firtsname, lastname, email, password, address, description );
+        let user  = await User.findOne({ email });
+        if (user) return res.status(400).json({ message: "User already exists", data: null, status: 400 });
+        const newuser =await  User.create({ firtsname, lastname, email, phone, password:await Utils.criptPassword(password), role:"tailor" });
+      //   console.log(newuser);
+        const newVendor = await Vendor.create({ idUser:newuser._id, address, description });
+        // Envoi d'un e-mail de confirmation
+        // Envoi d'un e-mail de confirmation
+        const emailMessage = `Bienvenue ${firtsname} ${lastname} ! Votre compte de vendeur a été créé avec succès.`;
+        await Messenger.sendMail(email, firtsname, emailMessage);
+
+        // Envoi d'un SMS de confirmation
+        const smsMessage = `Bienvenue ${firtsname} ! Votre compte de vendeur a été créé avec succès.`;
+        await Messenger.sendSms(phone, firtsname, smsMessage);
+        res.status(201).json({ message: "Vendor created successfully", data: newVendor, status: 201 });
+      } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+      }
+
+    } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  static listerVendors = async (req, res) => {
+    try {
+      const vendors = await Vendor.find();
+      res.status(200).json({ message: "Vendors retrieved successfully", data: vendors, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  static updatevendor = async (req, res) => {
+    try {
+      const { id } = req.userId;
+      const vendor = await Vendor.findById(id);
+      if (!vendor) return res.status(404).json({ message: "Vendor not found", data: null, status: 404 });
+     const { error } = validateVendor(req.body);
+      if (error) return res.status(400).json({ message: error.details[0].message ,data:null, status: 400 });
+      const { firtsname, lastname, email, password, address, description } = req.body;
+      const vendorUpdate = {};
+      if (firtsname) vendorUpdate.firtsname = firtsname;
+      if (lastname) vendorUpdate.lastname = lastname;
+      if (email) vendorUpdate.email = email;
+      if (password) vendorUpdate.password = await Utils.criptPassword(password);
+      if (address) vendorUpdate.address = address;
+      if (description) vendorUpdate.description = description;
+      const user = await User.findByIdAndUpdate(id, vendorUpdate);
+      if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+      const updatedVendor = await Vendor.findByIdAndUpdate(id, vendorUpdate, { new: true });
+      res.status(200).json({ message: "Vendor updated successfully", data: updatedVendor, status: 200 });
+    } catch (error) {
+      res.status(500).json({ message: error.message, data: null, status: 500 });
+    }
+  }
+
+  
 
 }

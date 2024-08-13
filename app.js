@@ -15,6 +15,8 @@ import DiscussionRoute from './Route/DiscussionRoute.js';
 
 connectDB();
 
+ 
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +27,9 @@ app.use(`${process.env.BASE_URL}/report`, ReportRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
  
 cron.schedule('0 * * * *', async () => { 
     try {

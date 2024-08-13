@@ -267,23 +267,6 @@ paths:
         '404':
           description: Post non trouvé
 
-  /post/repost/{idPost}:
-    delete:
-      summary: Supprimer un repost
-      tags:
-        - Post
-      parameters:
-        - name: idPost
-          in: path
-          required: true
-          description: ID du post à supprimer du repost
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Repost supprimé avec succès
-        '404':
-          description: Post non trouvé
 
   /post/report/{postId}:
     post:
