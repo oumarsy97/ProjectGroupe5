@@ -1,5 +1,6 @@
 import express from 'express';
 import { config } from 'dotenv';
+import setupSwagger from './utils/swagger.js';
 import connectDB from './config/database.js';
 import UserRoute from './Route/UserRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
@@ -47,10 +48,13 @@ cron.schedule('0 * * * *', async () => {
     }
 }); 
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
-  console.log(`Documentation Swagger disponible sur http://localhost:${PORT}/api-docs`);
+ // Swagger
+setupSwagger(app);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+    console.log(`day mboli rek http://localhost:${port}/api-docs`);
+    
 });
 
 
