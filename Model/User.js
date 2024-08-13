@@ -62,7 +62,6 @@ const validateUser = (user) => {
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
         genre: Joi.string().valid("man", "woman"),
     });
-
     return schema.validate(user);
 };
 
@@ -101,14 +100,14 @@ const TailorSchema = new Schema({
         default: Date.now
     },
 
-credits: {
-    type: Number,
-    default: 50
-},
-freePostsUsed: {
-    type: Number,
-    default: 0
-}
+    credits: {
+        type: Number,
+        default: 50
+    },
+    freePostsUsed: {
+        type: Number,
+        default: 0
+    }
 
 });
 
