@@ -349,10 +349,10 @@ export default class UserController {
           const topTailors = await Tailor.find()
               .sort({ votes: -1 })
               .limit(10)
-              .populate('idUser', 'firstname lastname') // Assurez-vous que ces champs existent
+              .populate('idUser', 'firtsname lastname') // Assurez-vous que ces champs existent
               .select('votes');
           const formattedTailors = topTailors.map(tailor => ({
-              tailorname: `${tailor.idUser?.firstname || 'Unknown'} ${tailor.idUser?.lastname || 'Unknown'}`, // Utilisation de l'opérateur de coalescence
+              tailorname: `${tailor.idUser?.firtsname || 'Unknown'} ${tailor.idUser?.lastname || 'Unknown'}`, // Utilisation de l'opérateur de coalescence
               votes: tailor.votes
           }));
           console.log(formattedTailors);

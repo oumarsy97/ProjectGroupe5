@@ -12,6 +12,7 @@ import { Story } from './Model/Story.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
 import ChatRoute from './Route/ChatRoute.js';   
 import { swaggerUi, swaggerSpec } from './config/swaggerConfig.js';
+import setupSwagger from './utils/swagger.js';
 
 config();
 // Messenger.sendSms('0676960964', 'Seydina', 'Hello from Tailor Digital');
@@ -30,6 +31,7 @@ app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+setupSwagger(app);
 
 cron.schedule('0 * * * *', async () => {
     try {

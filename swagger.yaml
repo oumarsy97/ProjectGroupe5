@@ -610,6 +610,14 @@ paths:
       summary: Rechercher des utilisateurs
       tags:
         - Utilisateurs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                search:
+                  type: string
       responses:
         '200':
           description: Résultats de la recherche
@@ -1200,3 +1208,58 @@ components:
         createdAt:
           type: string
           format: date-time
+          
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - body
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        postId:
+          type: string
+          format: uuid
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - postId
+        - text
+    Story:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        author:
+          type: string
+          format: uuid
