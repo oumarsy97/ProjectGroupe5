@@ -37,6 +37,10 @@ app.use(`${process.env.BASE_URL}/report`, ReportRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
+
+app.get('/', (req, res) => {
+  res.send('Hello World');
+});
  
 // Route pour Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
