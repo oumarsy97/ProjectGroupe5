@@ -297,9 +297,11 @@ export default class UserController {
     }
   };
   
-  static monprofil = async (req, res) => {
+static monprofil = async (req, res) => {
     try {
       const idUser = req.userId;
+      console.log(req);
+      
       const user = await User.findById(idUser);
   
       if (!user) {
@@ -307,40 +309,13 @@ export default class UserController {
       }
   
       if (user.role === 'tailor') {
-        const tailor = await Tailor.aggregate([
-          {
-            $match: { idUser: user._id } 
-          },
-          {
-            $lookup: {
-              from: "users",
-              localField: "idUser",
-              foreignField: "_id",
-              as: "user",
-            },
-          },
-          { $unwind: "$user" },
-          {
-            $project: {
-              _id: 1,
-              address: 1,
-              description: 1,
-              firstname: "$user.firstname",
-              lastname: "$user.lastname",
-              email: "$user.email",
-              phone: "$user.phone",
-              credits: 1,
-              photo: user.photo,
-              role: "$user.role",
-            },
-          },
-        ]);
-  
-        if (!tailor.length) {
+        const tailor = await Tailor.find({ idUser });
+        // console.log(tailor);
+        if (!tailor) {
           return res.status(404).json({ message: "Tailor not found", data: null, status: 404 });
         }
-  
-        return res.status(200).json({ message: "Tailor found successfully", data: tailor[0], status: 200 });
+        
+        return res.status(200).json({ message: "Tailor found successfully", data: user, status: 200 });
       }
   
       res.status(200).json({ message: "User found successfully", data: user, status: 200 });
@@ -348,8 +323,6 @@ export default class UserController {
       res.status(500).json({ message: error.message, data: null, status: 500 });
     }
   };
-  
-
   static search = async (req, res) => {
     try {
       const { search } = req.body;
