@@ -111,11 +111,9 @@ const TailorSchema = new Schema({
 
 });
 
-
 const Tailor = model("Tailor", TailorSchema);
 const validateTailor = (tailor) => {
     const schema = Joi.object({
-        // lastname: Joi.string().min(2).max(30).required(),
         phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
         email: Joi.string().email().required(),
         photo: Joi.string(),
@@ -124,7 +122,6 @@ const validateTailor = (tailor) => {
         idUser: Joi.required(),
         description: Joi.string().required(),
     });
-
     return schema.validate(tailor);
 }
 //vendeur
@@ -173,6 +170,7 @@ const VendorSchema = new Schema({
 
 });
 
+
 const Vendor = model("Vendor", VendorSchema);
 const validateVendor = (vendor) => {
     const schema = Joi.object({
@@ -189,4 +187,47 @@ const validateVendor = (vendor) => {
     return schema.validate(vendor);
 }
 
-export { User, validateUser, Tailor, validateTailor, Vendor, validateVendor };
+//Commande
+const CommandeSchema = new Schema({
+    idUser: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    idProduit: {
+        type: Schema.Types.ObjectId,
+        ref: "Produit",
+        required: true
+    },
+    createdDate: {
+        type: Date,
+        default: Date.now
+    },
+    quantity: {
+        type: Number,
+        required: true
+    },
+    price: {
+        type: Number,
+        required: true
+    }
+   
+});
+
+const Commande = model("Commande",CommandeSchema);
+
+const validateCommande = (commande) => {
+    const schema = Joi.object({
+        products: Joi.array().items(
+            Joi.object({
+                quantity: Joi.number().required(),
+                price: Joi.number().required(),
+                totalPrice: Joi.number().required()
+            })
+        ).required()
+    });
+
+    return schema.validate(commande);
+}
+
+export { User, validateUser, Tailor, validateTailor, Vendor, validateVendor ,Commande,validateCommande};

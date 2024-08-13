@@ -1,8 +1,9 @@
-import { User, validateUser, Tailor, validateTailor, Vendor, validateVendor } from "../Model/User.js";
+import { User, validateUser, Tailor, validateTailor, Vendor, validateVendor,Commande,validateCommande } from "../Model/User.js";
 import upload from '../config/multerConfig.js'; // Import de la configuration multer
 import Utils from "../utils/utils.js";
 import GenerateCode from "../Model/GenerateCode.js";
 import Messenger from "../utils/Messenger.js";
+
 
 export default class UserController {
   static addUser = async (req, res) => {
@@ -484,8 +485,7 @@ static becometailor = async (req, res) => {
         const newuser =await  User.create({ firtsname, lastname, email, phone, password:await Utils.criptPassword(password), role:"tailor" });
       //   console.log(newuser);
         const newVendor = await Vendor.create({ idUser:newuser._id, address, description });
-        // Envoi d'un e-mail de confirmation
-        // Envoi d'un e-mail de confirmation
+       
         const emailMessage = `Bienvenue ${firtsname} ${lastname} ! Votre compte de vendeur a été créé avec succès.`;
         await Messenger.sendMail(email, firtsname, emailMessage);
 
@@ -535,6 +535,31 @@ static becometailor = async (req, res) => {
     }
   }
 
+    
+    static addCommande = async (req, res) => {
+      try {
+        const { error } = validateCommande(req.body);
+        if (error) return res.status(400).json({ message: "erreur bi mboli na", data: null, status: 400 });
+        const { idUser, idProduit, quantity, price } = req.body;
+        const user = await User.findById(idUser);
+        if (!user) return res.status(404).json({ message: "User not found", data: null, status: 404 });
+        const product = await Product.findById(idProduit);
+        if (!product) return res.status(404).json({ message: "Product not found", data: null, status: 404 });
+        const totalPrice = quantity * price;
+        const newCommande = await Commande.create({
+          idUser,
+          idProduit,
+          quantity,
+          price,
+          totalPrice,
+        });
+        // Respond with the created Commande
+        res.status(201).json({ message: "Commande created successfully", data: newCommande, status: 201 });
+      } catch (error) {
+        res.status(500).json({ message: error.message, data: null, status: 500 });
+      }
+    };
   
-
-}
+    // Other methods...
+  }
+  
