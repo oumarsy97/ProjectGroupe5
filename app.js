@@ -12,17 +12,7 @@ import Messenger from './utils/Messenger.js';
 import cron from 'node-cron';
 import { Story } from './Model/Story.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
-import cors from 'cors';
 
-const corsOptions = {
-        origin: '*',
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-        allowedHeaders: 'Content-Type,Authorization',
-        optionsSuccessStatus: 200,
-        credentials: true,
-    }
-
-app.use(cors(corsOptions));
 
 // Importation de Swagger
 import { swaggerUi, swaggerSpec } from './swaggerConfig.js';
