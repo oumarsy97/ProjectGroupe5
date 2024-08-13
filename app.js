@@ -1,5 +1,6 @@
 import express from 'express';
 import { config } from 'dotenv';
+import setupSwagger from './utils/swagger.js';
 import connectDB from './config/database.js';
 import UserRoute from './Route/UserRoute.js';
 import FollowRoute from './Route/FollowRoute.js';
@@ -14,7 +15,7 @@ import DiscussionRoute from './Route/DiscussionRoute.js';
 
 connectDB();
 
-
+ 
 
 const app = express();
 app.use(express.json());
@@ -41,8 +42,11 @@ cron.schedule('0 * * * *', async () => {
     }
 }); 
 
- 
+ // Swagger
+setupSwagger(app);
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
+    console.log(`day mboli rek http://localhost:${port}/api-docs`);
+    
 });

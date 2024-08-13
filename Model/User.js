@@ -66,7 +66,6 @@ const validateUser = (user) => {
     return schema.validate(user);
 };
 
-
 //Tailor
 const TailorSchema = new Schema({
     
@@ -129,5 +128,66 @@ const validateTailor = (tailor) => {
 
     return schema.validate(tailor);
 }
+//vendeur
+const VendorSchema = new Schema({
+    idUser: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
 
-export { User, validateUser, Tailor, validateTailor };
+    created: {
+        type: Date,
+        default: Date.now
+    },
+
+    credits: {
+        type: Number,
+        default: 50
+    },
+
+    freePostsUsed: {
+        type: Number,
+        default: 0
+    },
+
+    follows: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        }],
+    votes : {
+        type: Number,
+        required: true,
+        default: 0
+    },
+
+    address: {
+        type: String,
+        required: true
+    },
+
+    description: {
+        type: String,
+        required: true
+    }
+
+});
+
+const Vendor = model("Vendor", VendorSchema);
+const validateVendor = (vendor) => {
+    const schema = Joi.object({
+        firtsname: Joi.string().min(2).max(30).required(),
+         lastname: Joi.string().min(2).max(30).required(),
+        phone: Joi.string().pattern(new RegExp('^[0-9]{9,14}$')),
+        email: Joi.string().email().required(),
+        photo: Joi.string(),
+        password: Joi.string().min(6).required(),
+        address: Joi.string().required(),
+        description: Joi.string().required(),
+    });
+
+    return schema.validate(vendor);
+}
+
+export { User, validateUser, Tailor, validateTailor, Vendor, validateVendor };

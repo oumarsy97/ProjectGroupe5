@@ -7,8 +7,8 @@ const PostRoute = express.Router();
 
 PostRoute.get('/getPostById/:id', Middleware.isanTailor, PostController.getPostById);
 PostRoute.post('/create', Middleware.auth, Middleware.isanTailor, upload, PostController.create);
-PostRoute.post('/delete', Middleware.auth, Middleware.isanTailor, PostController.deletePost);
-PostRoute.post('/update', Middleware.auth, Middleware.isanTailor, PostController.updatePost);
+// PostRoute.post('/delete', Middleware.auth, Middleware.isanTailor, PostController.deletePost);
+// PostRoute.post('/update', Middleware.auth, Middleware.isanTailor, PostController.updatePost);
 PostRoute.post('/likePost/:id',Middleware.auth, PostController.likePost);
 PostRoute.post('/dislikePost/:id',Middleware.auth, PostController.dislikePost);
 PostRoute.get('/getAllPosts', PostController.getAllPosts);

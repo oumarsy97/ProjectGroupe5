@@ -20,5 +20,11 @@ router.post("/achatcode",Middleware.auth,Middleware.isanTailor, UserController.a
 router.get("/monprofil",Middleware.auth,UserController.monprofil);
 router.post("/becometailor/", Middleware.auth, UserController.becometailor);
 
+//vendeur
+router.post("/addvendor",UserController.addvendor);
+router.get("/listervendors",UserController.listerVendors);
+router.put("/updatevendor/:id",UserController.updatevendor);
+
+
 
 export default router;
