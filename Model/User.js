@@ -190,4 +190,5 @@ const validateVendor = (vendor) => {
     return schema.validate(vendor);
 }
 
+
 export { User, validateUser, Tailor, validateTailor, Vendor, validateVendor };

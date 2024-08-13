@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Tailor } from '../Model/User.js';
+import { Tailor, Vendor } from '../Model/User.js';
 
 export default class Middleware {
 
@@ -25,6 +25,16 @@ export default class Middleware {
             const tailor = await Tailor.findOne({ idUser: req.userId });
             if (!tailor) {
                 return res.status(401).json({ message: 'You are not a tailor', data: null, status: false });
+            }
+            next();
+        });
+    };
+
+    static isanVendor = async (req, res, next) => {
+        await this.auth(req, res, async () => {
+            const vendor = await Vendor.findOne({ idUser: req.userId });
+            if (!vendor) {
+                return res.status(401).json({ message: 'You are not a vendor', data: null, status: false });
             }
             next();
         });

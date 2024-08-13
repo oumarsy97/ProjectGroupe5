@@ -12,7 +12,7 @@ import Messenger from './utils/Messenger.js';
 import cron from 'node-cron';
 import { Story } from './Model/Story.js';
 import DiscussionRoute from './Route/DiscussionRoute.js';
-
+import VenteRoute from './Route/VenteRoute.js';
 connectDB();
 
  
@@ -27,9 +27,10 @@ app.use(`${process.env.BASE_URL}/report`, ReportRoute);
 app.use(`${process.env.BASE_URL}/discussions`, DiscussionRoute);
 app.use(`${process.env.BASE_URL}/chat`, ChatRoute);
 app.use(`${process.env.BASE_URL}/story`, StoryRoute);
+app.use(`${process.env.BASE_URL}/vendeur`, VenteRoute);
 app.get('/', (req, res) => {
-    res.send('Hello World');
-});
+    res.send('Hello World'); 
+}); 
  
 cron.schedule('0 * * * *', async () => { 
     try {
